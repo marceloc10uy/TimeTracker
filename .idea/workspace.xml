@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="5825a923-5ae8-4c89-9987-6f68b8dfe3e2" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/TimeTracker.iml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/db.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/logging_config.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/main.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/middleware.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/routers/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/routers/day_router.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/routers/settings_router.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/routers/week_router.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/schemas.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/services/__init__.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/services/day_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/services/week_service.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/backend/time_utils.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/api.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/frontend/src/time.js" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 3
+}</component>
+  <component name="ProjectId" id="38vybQgKgxp7hUOAiS6vphkwcQ9" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHELLCHECK.PATH": "/Users/marcelo.coppola/Library/Application Support/JetBrains/PyCharm2025.3/plugins/Shell Script/shellcheck",
+    "git-widget-placeholder": "main"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-python-sdk-3944b0c99280-6d6dccd035ac-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-253.30387.127" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="5825a923-5ae8-4c89-9987-6f68b8dfe3e2" name="Changes" comment="" />
+      <created>1769694409412</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1769694409412</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/services/day_service.py</url>
+          <line>19</line>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/backend/routers/day_router.py</url>
+          <line>151</line>
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
