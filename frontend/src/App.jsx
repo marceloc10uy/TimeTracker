@@ -1,16 +1,19 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPatch, apiPost } from "./api";
 import { computeNetMinutesLive, minutesToHHMM, todayISO } from "./time";
+import HolidaysPanel from "./components/HolidaysPanel";
 
 function Card({ title, children }) {
   return (
-    <div style={{
-      background: "rgba(0,0,0,0.04)",
-      border: "1px solid rgba(0,0,0,0.08)",
-      borderRadius: 14,
-      padding: 16,
-      marginBottom: 14,
-    }}>
+    <div
+      style={{
+        background: "rgba(0,0,0,0.04)",
+        border: "1px solid rgba(0,0,0,0.08)",
+        borderRadius: 14,
+        padding: 16,
+        marginBottom: 14,
+      }}
+    >
       <div style={{ fontWeight: 700, marginBottom: 10 }}>{title}</div>
       {children}
     </div>
@@ -51,26 +54,51 @@ function Progress({ value, soft, hard }) {
       <div style={{ fontSize: 12, opacity: 0.8 }}>
         Soft {minutesToHHMM(soft)} • Hard {minutesToHHMM(hard)} • Current {minutesToHHMM(value)}
       </div>
-      <div style={{
-        position: "relative",
-        height: 12,
-        borderRadius: 8,
-        background: "rgba(0,0,0,0.08)",
-        overflow: "hidden",
-        marginTop: 6
-      }}>
+      <div
+        style={{
+          position: "relative",
+          height: 12,
+          borderRadius: 8,
+          background: "rgba(0,0,0,0.08)",
+          overflow: "hidden",
+          marginTop: 6,
+        }}
+      >
         <div style={{ height: "100%", width: `${pct}%`, background: "rgba(0,0,0,0.55)" }} />
-        <div style={{
-          position: "absolute",
-          left: `${softPct}%`,
-          top: 0,
-          bottom: 0,
-          width: 2,
-          background: "rgba(255,255,255,0.9)"
-        }} />
+        <div
+          style={{
+            position: "absolute",
+            left: `${softPct}%`,
+            top: 0,
+            bottom: 0,
+            width: 2,
+            background: "rgba(255,255,255,0.9)",
+          }}
+        />
       </div>
       <div style={{ fontSize: 12, marginTop: 6 }}>{statusText}</div>
     </div>
+  );
+}
+
+function OffBadge({ off }) {
+  if (!off) return "-";
+  const label = off.label ? `: ${off.label}` : "";
+  return (
+    <span
+      style={{
+        padding: "2px 8px",
+        border: "1px solid rgba(0,0,0,0.2)",
+        borderRadius: 999,
+        fontSize: 12,
+        background: "white",
+        whiteSpace: "nowrap",
+      }}
+      title={off.source ? `source: ${off.source}` : undefined}
+    >
+      {off.kind}
+      {label}
+    </span>
   );
 }
 
@@ -131,12 +159,12 @@ export default function App() {
   const dailySoft = day?.targets?.daily_soft ?? 0;
   const dailyHard = day?.targets?.daily_hard ?? 0;
 
-  const weeklySoft = week?.targets?.weekly_soft ?? 0;
-  const weeklyHard = week?.targets?.weekly_hard ?? 0;
+  // NEW backend returns week.weekly_soft/week.weekly_hard (preferred)
+  // Backward compatible with your older structure week.targets.weekly_soft/week.weekly_hard
+  const weeklySoft = week?.weekly_soft ?? week?.targets?.weekly_soft ?? 0;
+  const weeklyHard = week?.weekly_hard ?? week?.targets?.weekly_hard ?? 0;
 
-  const netToday = !day?.start_time ? 0 : (day.end_time ? (day.net_minutes ?? 0) : liveNet);
-  
-  day?.end_time ? (day.net_minutes ?? 0) : liveNet;
+  const netToday = !day?.start_time ? 0 : day.end_time ? day.net_minutes ?? 0 : liveNet;
   const weekNet = week?.week_net_minutes ?? 0;
 
   const startNow = async () => {
@@ -146,7 +174,9 @@ export default function App() {
       setStartEdit(d.start_time ?? "");
       const w = await apiGet(`/api/week/${selectedDate}`);
       setWeek(w);
-    } catch (e) { setErr(String(e)); }
+    } catch (e) {
+      setErr(String(e));
+    }
   };
 
   const endNow = async () => {
@@ -156,7 +186,9 @@ export default function App() {
       setEndEdit(d.end_time ?? "");
       const w = await apiGet(`/api/week/${selectedDate}`);
       setWeek(w);
-    } catch (e) { setErr(String(e)); }
+    } catch (e) {
+      setErr(String(e));
+    }
   };
 
   const addBreak = async (m) => {
@@ -166,7 +198,9 @@ export default function App() {
       setBreakEdit(String(d.break_minutes ?? 0));
       const w = await apiGet(`/api/week/${selectedDate}`);
       setWeek(w);
-    } catch (e) { setErr(String(e)); }
+    } catch (e) {
+      setErr(String(e));
+    }
   };
 
   const subBreak = async (m) => {
@@ -176,7 +210,9 @@ export default function App() {
       setBreakEdit(String(d.break_minutes ?? 0));
       const w = await apiGet(`/api/week/${selectedDate}`);
       setWeek(w);
-    } catch (e) { setErr(String(e)); }
+    } catch (e) {
+      setErr(String(e));
+    }
   };
 
   const saveManual = async () => {
@@ -190,11 +226,20 @@ export default function App() {
       setDay(d);
       const w = await apiGet(`/api/week/${selectedDate}`);
       setWeek(w);
-    } catch (e) { setErr(String(e)); }
+    } catch (e) {
+      setErr(String(e));
+    }
   };
 
   return (
-    <div style={{ maxWidth: 760, margin: "0 auto", padding: 18, fontFamily: "system-ui, -apple-system, Segoe UI, Roboto" }}>
+    <div
+      style={{
+        maxWidth: 760,
+        margin: "0 auto",
+        padding: 18,
+        fontFamily: "system-ui, -apple-system, Segoe UI, Roboto",
+      }}
+    >
       <h2 style={{ marginTop: 4 }}>Time Tracker</h2>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
@@ -213,7 +258,7 @@ export default function App() {
             try {
               await loadAll(selectedDate);
             } catch (e) {
-              setErr(String(e))
+              setErr(String(e));
             }
           }}
         >
@@ -222,44 +267,82 @@ export default function App() {
 
         {day && (
           <div style={{ fontSize: 13, opacity: 0.85 }}>
-            {day.start_time ? `Start ${day.start_time}` : "Not started"} • {day.end_time ? `End ${day.end_time}` : "Running…"}
+            {day.start_time ? `Start ${day.start_time}` : "Not started"} •{" "}
+            {day.end_time ? `End ${day.end_time}` : "Running…"}
           </div>
         )}
       </div>
 
       {err && (
-        <div style={{ marginBottom: 12, padding: 10, borderRadius: 10, background: "rgba(255,0,0,0.12)", border: "1px solid rgba(255,0,0,0.2)" }}>
+        <div
+          style={{
+            marginBottom: 12,
+            padding: 10,
+            borderRadius: 10,
+            background: "rgba(255,0,0,0.12)",
+            border: "1px solid rgba(255,0,0,0.2)",
+          }}
+        >
           {err}
         </div>
       )}
 
       <Card title="Today">
         <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button onClick={startNow} disabled={!!day?.start_time} style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}>
+          <button
+            onClick={startNow}
+            disabled={!!day?.start_time}
+            style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+          >
             Start now
           </button>
-          <button onClick={endNow} disabled={!day?.start_time} style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}>
+          <button
+            onClick={endNow}
+            disabled={!day?.start_time}
+            style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+          >
             End now
           </button>
         </div>
 
-        <div style={{ marginTop: 14, display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: 12, width: "100%" }}>
+        <div
+          style={{
+            marginTop: 14,
+            display: "grid",
+            gridTemplateColumns: "repeat(2, 1fr)",
+            gap: 12,
+            width: "100%",
+          }}
+        >
           <div>
             <div style={{ fontSize: 12, opacity: 0.8 }}>Start time</div>
-            <input type="time" value={startEdit} onChange={(e) => setStartEdit(e.target.value)}
-                   style={{ padding: 10, borderRadius: 12, width: "100%" }} />
+            <input
+              type="time"
+              value={startEdit}
+              onChange={(e) => setStartEdit(e.target.value)}
+              style={{ padding: 10, borderRadius: 12, width: "100%" }}
+            />
           </div>
 
           <div>
             <div style={{ fontSize: 12, opacity: 0.8 }}>End time</div>
-            <input type="time" value={endEdit} onChange={(e) => setEndEdit(e.target.value)}
-                   style={{ padding: 10, borderRadius: 12, width: "100%" }} />
+            <input
+              type="time"
+              value={endEdit}
+              onChange={(e) => setEndEdit(e.target.value)}
+              style={{ padding: 10, borderRadius: 12, width: "100%" }}
+            />
           </div>
 
           <div>
             <div style={{ fontSize: 12, opacity: 0.8 }}>Break total (minutes)</div>
-            <input type="number" min="0" value={breakEdit} onChange={(e) => setBreakEdit(e.target.value)}
-                   style={{ padding: 10, borderRadius: 12, width: "100%" }} />
+            <input
+              type="number"
+              min="0"
+              value={breakEdit}
+              onChange={(e) => setBreakEdit(e.target.value)}
+              style={{ padding: 10, borderRadius: 12, width: "100%" }}
+            />
           </div>
         </div>
 
@@ -293,6 +376,11 @@ export default function App() {
       <Card title="This week (Mon–Fri)">
         <div style={{ fontSize: 13, opacity: 0.9 }}>
           Week: {week?.week_start} → {week?.week_end}
+          {typeof week?.working_days === "number" ? (
+            <span style={{ marginLeft: 8, opacity: 0.85 }}>
+              • Working days: <b>{week.working_days}</b>
+            </span>
+          ) : null}
         </div>
 
         <Progress value={weekNet} soft={weeklySoft} hard={weeklyHard} />
@@ -315,6 +403,7 @@ export default function App() {
             <thead>
               <tr style={{ textAlign: "left", opacity: 0.85 }}>
                 <th style={{ padding: "8px 6px" }}>Date</th>
+                <th style={{ padding: "8px 6px" }}>Off</th>
                 <th style={{ padding: "8px 6px" }}>Start</th>
                 <th style={{ padding: "8px 6px" }}>End</th>
                 <th style={{ padding: "8px 6px" }}>Break</th>
@@ -323,8 +412,17 @@ export default function App() {
             </thead>
             <tbody>
               {week?.days?.map((d) => (
-                <tr key={d.date} style={{ borderTop: "1px solid rgba(0,0,0,0.08)" }}>
+                <tr
+                  key={d.date}
+                  style={{
+                    borderTop: "1px solid rgba(0,0,0,0.08)",
+                    opacity: d.is_off ? 0.6 : 1,
+                  }}
+                >
                   <td style={{ padding: "8px 6px" }}>{d.date}</td>
+                  <td style={{ padding: "8px 6px" }}>
+                    {d.is_off ? <OffBadge off={d.off} /> : "-"}
+                  </td>
                   <td style={{ padding: "8px 6px" }}>{d.start_time ?? "-"}</td>
                   <td style={{ padding: "8px 6px" }}>{d.end_time ?? (d.running ? "…" : "-")}</td>
                   <td style={{ padding: "8px 6px" }}>{d.break_minutes}m</td>
@@ -334,12 +432,33 @@ export default function App() {
             </tbody>
           </table>
         </div>
+
+        {/* ✅ Holidays module */}
+        {week && (
+          <HolidaysPanel
+            week={week}
+            selectedDate={selectedDate}
+            onChanged={async () => {
+              await loadAll(selectedDate);
+            }}
+          />
+        )}
       </Card>
 
+      {/* Keeping your existing footer, but guard it better */}
       {settings && (
         <div style={{ fontSize: 12, opacity: 0.7 }}>
-          Settings: daily soft {minutesToHHMM(settings.settings.daily_soft_minutes)} • daily hard {minutesToHHMM(settings.settings.daily_hard_minutes)} •
-          workdays/week {settings.settings.workdays_per_week} • weekly hard {minutesToHHMM(settings.derived.weekly_hard_minutes)} • weekly soft {minutesToHHMM(settings.derived.weekly_soft_minutes)}
+          {settings.settings ? (
+            <>
+              Settings: daily soft {minutesToHHMM(settings.settings.daily_soft_minutes)} • daily hard{" "}
+              {minutesToHHMM(settings.settings.daily_hard_minutes)} • workdays/week{" "}
+              {settings.settings.workdays_per_week} • weekly hard{" "}
+              {minutesToHHMM(settings.derived?.weekly_hard_minutes ?? 0)} • weekly soft{" "}
+              {minutesToHHMM(settings.derived?.weekly_soft_minutes ?? 0)}
+            </>
+          ) : (
+            <>Settings loaded.</>
+          )}
         </div>
       )}
     </div>

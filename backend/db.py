@@ -35,6 +35,28 @@ def init_db() -> None:
     )
     """)
 
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS recurring_holiday (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            month INTEGER NOT NULL,
+            day INTEGER NOT NULL,
+            label TEXT,
+            UNIQUE(month, day)        
+        )
+    """            
+    )
+
+    cur.execute(
+    """ 
+        CREATE TABLE IF NOT EXISTS time_off (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            label TEXT
+        )
+    """)
+
     # Seed defaults if missing
     for k, v in DEFAULT_SETTINGS.items():
         cur.execute(

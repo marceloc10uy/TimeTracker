@@ -2,6 +2,9 @@ import os
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
+import sys
+
+ENV = "dev" if "--reload" in sys.argv else "prod"
 
 def mount_react_spa(app: FastAPI) -> None:
     """
@@ -11,7 +14,7 @@ def mount_react_spa(app: FastAPI) -> None:
         - /<anything>    -> SPA fallback to index.html (unless it's a real file)
     Assumes build output is at: /frontend/dist
     """
-    if os.getenv("ENV") != "production":
+    if ENV != "prod":
         return
 
     base_dir = os.path.dirname(os.path.abspath(__file__))

@@ -5,7 +5,7 @@ def parse_date(s: str) -> date:
     try:
         return datetime.strptime(s, "%Y-%m-%d").date()
     except ValueError:
-        raise HTTPException(400, "Invalid date format. Use YYY-MM-DD.")
+        raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD.")
 
 def validate_hhmm(s: str) -> None:
     try:

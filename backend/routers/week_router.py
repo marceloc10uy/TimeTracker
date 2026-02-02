@@ -7,8 +7,7 @@ router = APIRouter(prefix="/api/week", tags=["week"])
 
 @router.get("/{day_str}")
 def get_week(day_str: str):
-    d= parse_date(day_str)
     con = get_con()
-    out = compute_week(con, d)
+    out = compute_week(con, day_str)
     con.close()
     return out

@@ -56,3 +56,38 @@ export async function apiPatch(path, body) {
     });
 }
 
+export async function apiDelete(path, body) {
+    return logFetch("DELETE", path, {
+       method: "DELETE",
+       headers: body ? { "Content-Type": "application/json"} : undefined,
+       body: body ? JSON.stringify(body) : undefined
+    });
+}
+
+export async function apiGetRecurringHolidays() {
+    return apiGet("/api/recurring-holidays");
+}
+
+export async function apiUpsertRecurringHoliday(payload) {
+    return apiPost("/api/recurring-holidays", payload)
+}
+
+export async function apiDeleteRecurringHoliday(id) {
+    return apiDelete(`/api/recurring-holidays/${id}`)
+}
+
+export async function apiListTimeOff(fromDate, toDate) {
+    const qs = new URLSearchParams();
+    if (fromDate) qs.set("from_date", fromDate);
+    if (toDate) qs.set("to_date", toDate);
+    return apiGet(`/api/time-off?${qs.toString()}`);
+}
+
+export async function apiCreateTimeOff(payload) {
+    return apiPost("/api/time-off", payload)
+}
+
+export async function apiDeleteTimeOff(id) {
+    return apiDelete(`/api/time-off/${id}`);
+}
+

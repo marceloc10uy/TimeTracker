@@ -1,5 +1,5 @@
-from typing import Optional
-from pydantic import BaseModel, Field
+from typing import Optional, Literal
+from pydantic import BaseModel, Field, conint
 
 class MinutesBody(BaseModel):
     minutes: int = Field(ge=0, le=24 * 60)
@@ -20,3 +20,14 @@ class StartAtBody(BaseModel):
 
 class EndAtBody(BaseModel):
     end_time: str = Field(description="HH:MM")
+
+class RecurringHolidayCreate(BaseModel):
+    month: conint(ge=1, le=32)
+    day: conint(ge=1, le=31)
+    label: Optional[str] = None
+
+class TimeoffCreate(BaseModel):
+    start_date: str = Field(description="YYY-MM-DD")
+    end_date: str = Field(description="YYYY-MM-DD")
+    kind: Literal["vacation", "personal"]
+    label: Optional[str] = None
