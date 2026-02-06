@@ -138,7 +138,7 @@ def break_subtract(day_str: str, body: MinutesBody):
     cur = con.cursor()
 
     new_val = max(0, int(row["break_minutes"] or 0) - body.minutes)
-    cur.execute("UPDATE work)day SET break_minutes = ? WHERE date = ?" , (new_val, day_str))
+    cur.execute("UPDATE work_day SET break_minutes = ? WHERE date = ?" , (new_val, day_str))
     con.commit()
 
     cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))

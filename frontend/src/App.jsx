@@ -46,8 +46,8 @@ function Progress({ value, soft, hard }) {
     value > hard
       ? `Over HARD by ${minutesToHHMM(value - hard)}`
       : value > soft
-      ? `Over soft by ${minutesToHHMM(value - soft)} • Hard remaining ${minutesToHHMM(hard - value)}`
-      : `Soft remaining ${minutesToHHMM(soft - value)}`;
+        ? `Over soft by ${minutesToHHMM(value - soft)} • Hard remaining ${minutesToHHMM(hard - value)}`
+        : `Soft remaining ${minutesToHHMM(soft - value)}`;
 
   return (
     <div style={{ marginTop: 10 }}>
@@ -108,6 +108,7 @@ export default function App() {
   const [week, setWeek] = useState(null);
   const [settings, setSettings] = useState(null);
   const [err, setErr] = useState("");
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   // local editable inputs
   const [startEdit, setStartEdit] = useState("");
@@ -136,6 +137,13 @@ export default function App() {
     loadAll(selectedDate).catch((e) => setErr(String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
+
+  // Handle window resize
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Local ticking counter when running
   useEffect(() => {
@@ -234,13 +242,12 @@ export default function App() {
   return (
     <div
       style={{
-        maxWidth: 760,
-        margin: "0 auto",
+        width: "100%",
         padding: 18,
         fontFamily: "system-ui, -apple-system, Segoe UI, Roboto",
       }}
     >
-      <h2 style={{ marginTop: 4 }}>Time Tracker</h2>
+      <h2 style={{ marginTop: 4, textAlign: "center" }}>Time Tracker</h2>
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginBottom: 14 }}>
         <label style={{ fontSize: 14 }}>
@@ -287,163 +294,172 @@ export default function App() {
         </div>
       )}
 
-      <Card title="Today">
-        <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-          <button
-            onClick={startNow}
-            disabled={!!day?.start_time}
-            style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
-          >
-            Start now
-          </button>
-          <button
-            onClick={endNow}
-            disabled={!day?.start_time}
-            style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
-          >
-            End now
-          </button>
-        </div>
-
-        <div
-          style={{
-            marginTop: 14,
-            display: "grid",
-            gridTemplateColumns: "repeat(2, 1fr)",
-            gap: 12,
-            width: "100%",
-          }}
-        >
-          <div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Start time</div>
-            <input
-              type="time"
-              value={startEdit}
-              onChange={(e) => setStartEdit(e.target.value)}
-              style={{ padding: 10, borderRadius: 12, width: "100%" }}
-            />
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>End time</div>
-            <input
-              type="time"
-              value={endEdit}
-              onChange={(e) => setEndEdit(e.target.value)}
-              style={{ padding: 10, borderRadius: 12, width: "100%" }}
-            />
-          </div>
-
-          <div>
-            <div style={{ fontSize: 12, opacity: 0.8 }}>Break total (minutes)</div>
-            <input
-              type="number"
-              min="0"
-              value={breakEdit}
-              onChange={(e) => setBreakEdit(e.target.value)}
-              style={{ padding: 10, borderRadius: 12, width: "100%" }}
-            />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 10 }}>
-          <button onClick={saveManual} style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}>
-            Save manual changes
-          </button>
-        </div>
-
-        <div style={{ marginTop: 14 }}>
-          <div style={{ fontSize: 13, opacity: 0.9, marginBottom: 8 }}>Break chips</div>
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-            <Chip label="+5" onClick={() => addBreak(5)} />
-            <Chip label="+10" onClick={() => addBreak(10)} />
-            <Chip label="+15" onClick={() => addBreak(15)} />
-            <Chip label="+30" onClick={() => addBreak(30)} />
-            <Chip label="+60" onClick={() => addBreak(60)} />
-            <div style={{ width: 10 }} />
-            <Chip label="-5" onClick={() => subBreak(5)} />
-            <Chip label="-10" onClick={() => subBreak(10)} />
-          </div>
-        </div>
-
-        <div style={{ marginTop: 14, fontSize: 14 }}>
-          <b>Net today:</b> {minutesToHHMM(netToday)}
-        </div>
-
-        <Progress value={netToday} soft={dailySoft} hard={dailyHard} />
-      </Card>
-
-      <Card title="This week (Mon–Fri)">
-        <div style={{ fontSize: 13, opacity: 0.9 }}>
-          Week: {week?.week_start} → {week?.week_end}
-          {typeof week?.working_days === "number" ? (
-            <span style={{ marginLeft: 8, opacity: 0.85 }}>
-              • Working days: <b>{week.working_days}</b>
-            </span>
-          ) : null}
-        </div>
-
-        <Progress value={weekNet} soft={weeklySoft} hard={weeklyHard} />
-
-        <div style={{ marginTop: 10, fontSize: 13 }}>
-          {typeof week?.status?.pace_hard_per_day === "number" && (
-            <div>
-              Pace (hard): <b>{minutesToHHMM(week.status.pace_hard_per_day)}</b> per remaining weekday
+      <div className="main-cards-layout" style={{ display: "flex", flexDirection: windowWidth >= 1000 ? "row" : "column", gap: 18, alignItems: "flex-start" }}>
+        <div className="left-column" style={windowWidth >= 900 ? { flex: "1 1 0", minWidth: 0 } : {}}>
+          <Card title="Today">
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              <button
+                onClick={startNow}
+                disabled={!!day?.start_time}
+                style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+              >
+                Start now
+              </button>
+              <button
+                onClick={endNow}
+                disabled={!day?.start_time}
+                style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+              >
+                End now
+              </button>
             </div>
-          )}
-          {typeof week?.status?.pace_soft_per_day === "number" && (
-            <div style={{ opacity: 0.85 }}>
-              Pace (soft): {minutesToHHMM(week.status.pace_soft_per_day)} per remaining weekday
+
+            <div
+              style={{
+                marginTop: 14,
+                display: "grid",
+                gridAutoFlow: "column",
+                gap: 12,
+                width: 'fit-content',
+                justifyContent: "start",
+                alignItems: "center",
+              }}
+            >
+
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <label style={{ fontSize: 12, opacity: 0.8 }}>Start time</label>
+                <input
+                  type="time"
+                  value={startEdit}
+                  onChange={(e) => setStartEdit(e.target.value)}
+                  style={{ padding: "6px 8px", borderRadius: 10, fontSize: 13, width: 100, height: 20 }}
+                />
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <label style={{ fontSize: 12, opacity: 0.8 }}>End time</label>
+                <input
+                  type="time"
+                  value={endEdit}
+                  onChange={(e) => setEndEdit(e.target.value)}
+                  style={{ padding: "6px 8px", borderRadius: 10, fontSize: 13, width: 100, height: 20}}
+                />
+              </div>
+              
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <label style={{ fontSize: 12, opacity: 0.8}}>Break</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={breakEdit}
+                  onChange={(e) => setBreakEdit(e.target.value)}
+                  style={{ padding: "6px 8px", borderRadius: 10, fontSize: 13, width: 100, height: 20 }}
+                />
+              </div>
             </div>
-          )}
+
+            <div style={{ marginTop: 20 }}>
+              <button onClick={saveManual} style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}>
+                Save manual changes
+              </button>
+            </div>
+
+          </Card>
+
+          <Card title="Break Chips">
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: "flex", gap: 10, justifyContent: "center" }}>
+                <Chip label="+5" onClick={() => addBreak(5)} />
+                <Chip label="+10" onClick={() => addBreak(10)} />
+                <Chip label="+15" onClick={() => addBreak(15)} />
+                <Chip label="+30" onClick={() => addBreak(30)} />
+                <Chip label="+60" onClick={() => addBreak(60)} />
+                <div style={{ width: 10 }} />
+                <Chip label="-5" onClick={() => subBreak(5)} />
+                <Chip label="-10" onClick={() => subBreak(10)} />
+              </div>
+            </div>
+
+            <div style={{ marginTop: 14, fontSize: 14 }}>
+              <b>Net today:</b> {minutesToHHMM(netToday)}
+            </div>
+
+            <Progress value={netToday} soft={dailySoft} hard={dailyHard} />
+          </Card>
         </div>
 
-        <div style={{ marginTop: 12, overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-            <thead>
-              <tr style={{ textAlign: "left", opacity: 0.85 }}>
-                <th style={{ padding: "8px 6px" }}>Date</th>
-                <th style={{ padding: "8px 6px" }}>Off</th>
-                <th style={{ padding: "8px 6px" }}>Start</th>
-                <th style={{ padding: "8px 6px" }}>End</th>
-                <th style={{ padding: "8px 6px" }}>Break</th>
-                <th style={{ padding: "8px 6px" }}>Net</th>
-              </tr>
-            </thead>
-            <tbody>
-              {week?.days?.map((d) => (
-                <tr
-                  key={d.date}
-                  style={{
-                    borderTop: "1px solid rgba(0,0,0,0.08)",
-                    opacity: d.is_off ? 0.6 : 1,
-                  }}
-                >
-                  <td style={{ padding: "8px 6px" }}>{d.date}</td>
-                  <td style={{ padding: "8px 6px" }}>
-                    {d.is_off ? <OffBadge off={d.off} /> : "-"}
-                  </td>
-                  <td style={{ padding: "8px 6px" }}>{d.start_time ?? "-"}</td>
-                  <td style={{ padding: "8px 6px" }}>{d.end_time ?? (d.running ? "…" : "-")}</td>
-                  <td style={{ padding: "8px 6px" }}>{d.break_minutes}m</td>
-                  <td style={{ padding: "8px 6px" }}>{minutesToHHMM(d.net_minutes)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <div className="right-column" style={windowWidth >= 900 ? { flex: "0 0 520px" } : {}}>
+          <Card title="This week (Mon–Fri)">
+            <div style={{ fontSize: 13, opacity: 0.9 }}>
+              Week: {week?.week_start} → {week?.week_end}
+              {typeof week?.working_days === "number" ? (
+                <span style={{ marginLeft: 8, opacity: 0.85 }}>
+                  • Working days: <b>{week.working_days}</b>
+                </span>
+              ) : null}
+            </div>
 
-        {/* ✅ Holidays module */}
-        {week && (
-          <HolidaysPanel
-            week={week}
-            selectedDate={selectedDate}
-            onChanged={async () => {
-              await loadAll(selectedDate);
-            }}
-          />
-        )}
-      </Card>
+            <Progress value={weekNet} soft={weeklySoft} hard={weeklyHard} />
+
+            <div style={{ marginTop: 10, fontSize: 13 }}>
+              {typeof week?.status?.pace_hard_per_day === "number" && (
+                <div>
+                  Pace (hard): <b>{minutesToHHMM(week.status.pace_hard_per_day)}</b> per remaining weekday
+                </div>
+              )}
+              {typeof week?.status?.pace_soft_per_day === "number" && (
+                <div style={{ opacity: 0.85 }}>
+                  Pace (soft): {minutesToHHMM(week.status.pace_soft_per_day)} per remaining weekday
+                </div>
+              )}
+            </div>
+
+            <div style={{ marginTop: 12, overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+                <thead>
+                  <tr style={{ textAlign: "left", opacity: 0.85 }}>
+                    <th style={{ padding: "8px 6px" }}>Date</th>
+                    <th style={{ padding: "8px 6px" }}>Off</th>
+                    <th style={{ padding: "8px 6px" }}>Start</th>
+                    <th style={{ padding: "8px 6px" }}>End</th>
+                    <th style={{ padding: "8px 6px" }}>Break</th>
+                    <th style={{ padding: "8px 6px" }}>Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {week?.days?.map((d) => (
+                    <tr
+                      key={d.date}
+                      style={{
+                        borderTop: "1px solid rgba(0,0,0,0.08)",
+                        opacity: d.is_off ? 0.6 : 1,
+                      }}
+                    >
+                      <td style={{ padding: "8px 6px" }}>{d.date}</td>
+                      <td style={{ padding: "8px 6px" }}>
+                        {d.is_off ? <OffBadge off={d.off} /> : "-"}
+                      </td>
+                      <td style={{ padding: "8px 6px" }}>{d.start_time ?? "-"}</td>
+                      <td style={{ padding: "8px 6px" }}>{d.end_time ?? (d.running ? "…" : "-")}</td>
+                      <td style={{ padding: "8px 6px" }}>{d.break_minutes}m</td>
+                      <td style={{ padding: "8px 6px" }}>{minutesToHHMM(d.net_minutes)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {week && (
+              <HolidaysPanel
+                week={week}
+                selectedDate={selectedDate}
+                onChanged={async () => {
+                  await loadAll(selectedDate);
+                }}
+              />
+            )}
+          </Card>
+        </div>
+      </div>
 
       {/* Keeping your existing footer, but guard it better */}
       {settings && (
