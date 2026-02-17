@@ -94,6 +94,10 @@ function CalendarLegend() {
         <span className="legend-color both"></span>
         <span>Both</span>
       </div>
+      <div className="legend-item">
+        <span className="legend-color current-day"></span>
+        <span>Current Day</span>
+      </div>
     </div>
   );
 }

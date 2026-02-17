@@ -76,6 +76,10 @@
   background-color: #79ceb4; /* green for both */
 }
 
+.legend-color.current-day {
+  border: 2px solid white;
+}
+
 .weekday-headers {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
