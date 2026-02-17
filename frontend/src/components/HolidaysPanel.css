@@ -98,3 +98,92 @@
   background: transparent;
 }
 
+/* Sidebar / layout styles */
+.holidays-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-and-sidebar {
+  display: flex;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.sidebar {
+  width: 320px;
+  padding: 12px;
+  border-left: 1px solid #e6e6e6;
+  border-radius: 6px;
+}
+
+.sidebar h3 {
+  margin-top: 0;
+}
+
+.panel-section {
+  margin-bottom: 18px;
+}
+
+.form {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.form-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.form-row label {
+  min-width: 56px;
+}
+
+.items-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.items-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  background: transparent;
+  border: 1px solid #eee;
+  border-radius: 4px;
+}
+
+.small {
+  margin-left: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.day.selected-personal {
+  outline: 3px solid rgba(51,122,183,0.35);
+  background: #cfe9ff;
+}
+
+.day.selected-yearly {
+  outline: 3px solid rgba(255,153,102,0.35);
+  background: #ffe6d6;
+}
+
+.day.current-day {
+  outline: 2px solid #fff;
+  outline-offset: -2px;
+  border-radius: 4px;
+}
+
+
+.edit-toolbar {
+  margin-bottom: 12px;
+}
+

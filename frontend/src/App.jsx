@@ -186,9 +186,7 @@ export default function App() {
       <div>
         {week && (
           <HolidaysPanel
-            year={2026}
-            holidays={["2026-01-01", "2026-12-25", "2026-03-22"]}
-            personalDays={["2026-02-15", "2026-07-10, 2026-01-01", "2026-03-22"]}
+            year={new Date().getFullYear()}
           />
         )}
       </div>

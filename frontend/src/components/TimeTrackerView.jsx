@@ -85,12 +85,7 @@ function OffBadge({ off }) {
     return (
         <span
             style={{
-                padding: "2px 8px",
-                border: "1px solid rgba(0,0,0,0.2)",
-                borderRadius: 999,
-                fontSize: 12,
-                background: "white",
-                whiteSpace: "nowrap",
+                fontSize: 14
             }}
             title={off.source ? `source: ${off.source}` : undefined}
         >
