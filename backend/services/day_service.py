@@ -22,9 +22,9 @@ def compute_day_summary(con: sqlite3.Connection, day_str: str, row: sqlite3.Row)
     DAILY_HARD = targets["daily_hard"]
 
     day = parse_date(day_str)
-    start_time = row["start_time"]
-    end_time = row["end_time"]
-    break_minutes = int(row["break_minutes"]) or 0
+    start_time = row["start_time"] if row else None
+    end_time = row["end_time"] if row else None
+    break_minutes = int(row["break_minutes"]) if row and row["break_minutes"] else 0
 
     running = False
     gross_minutes = 0

@@ -1,0 +1,23 @@
+.main-cards-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  width: 100%;
+}
+
+.main-cards-layout > .left-column {
+  flex: 1 0 500px;
+  min-width: 500px;
+  max-width: 550px;
+}
+
+.main-cards-layout > .right-column {
+  flex: 1 0 520px;
+  max-width: 660px;
+}
+
+@media (min-width: 1050px) {
+  .main-cards-layout {
+    flex-direction: row;
+  }
+}

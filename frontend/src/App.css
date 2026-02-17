@@ -1,8 +1,12 @@
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  margin: 0;
+  
+  /* padding: 2rem; */
+  text-align: center; 
+}
+
+body {
+  margin: 0;
 }
 
 .logo {
@@ -39,35 +43,4 @@
 
 .read-the-docs {
   color: #888;
-}
-
-.main-cards-layout {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  width: 100%;
-  align-items: flex-start;
-}
-
-.main-cards-layout > .left-column {
-  width: 100%;
-}
-
-.main-cards-layout > .right-column {
-  width: 100%;
-}
-
-@media (min-width: 900px) {
-  .main-cards-layout {
-    flex-direction: row;
-  }
-  
-  .main-cards-layout > .left-column {
-    flex: 1 1 0;
-    min-width: 0;
-  }
-  
-  .main-cards-layout > .right-column {
-    flex: 0 0 520px;
-  }
 }

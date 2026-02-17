@@ -1,0 +1,96 @@
+.year-calendar {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr); /* 3 months per row */
+  gap: 5px;
+  max-width: 1200px;
+  min-width: 980px;
+}
+
+.month {
+  padding: 0 10px;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr); /* 7 days per week */
+  gap: 4px;
+}
+
+.day {
+  text-align: center;
+  padding: 0px;
+  border-radius: 4px;
+}
+
+.day.holiday {
+  background-color: #ffcccc;
+  font-weight: bold;
+}
+
+.day.personal {
+  background-color: #cce5ff;
+  font-weight: bold;
+}
+
+.day.both {
+  background-color: #79ceb4;
+  font-weight: bold;
+}
+
+.calendar-legend {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 20px;
+  margin-left: 10px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.montTitle {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.legend-color {
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.legend-color.holiday {
+  background-color: #ffcccc; /* red for official holidays */
+}
+
+.legend-color.personal {
+  background-color: #cce5ff; /* blue for personal holidays */
+}
+
+.legend-color.both {
+  background-color: #79ceb4; /* green for both */
+}
+
+.weekday-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  margin-bottom: 4px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.day.empty {
+  background: transparent;
+}
+
