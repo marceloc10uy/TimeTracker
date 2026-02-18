@@ -12,7 +12,7 @@ export default function App() {
   const [settings, setSettings] = useState(null);
   const [err, setErr] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
-  const [activeTab, setActiveTab] = useState("holidays");
+  const [activeTab, setActiveTab] = useState("timetracker");
 
   // local editable inputs
   const [startEdit, setStartEdit] = useState("");
