@@ -60,8 +60,14 @@ def compute_week(con: sqlite3.Connection, day_str: str) -> dict:
     daily_hard = int(settings["daily_hard_minutes"])
 
     # --- OFF MAP (recurring + personal) ---
-    rec_items = list_recurring(con)  # {id, month, day, label}
-    rec_lookup = {(r["month"], r["day"]): r for r in rec_items}
+    rec_items = list_recurring(con)  # {id, date, label}
+    rec_lookup = {}
+    for r in rec_items:
+        try:
+            d = parse_date(r.get("date"))
+            rec_lookup[(d.month, d.day)] = r
+        except Exception:
+            continue
     personal_map = expand_time_off_days(con, week_start, week_end)  # YYYY-MM-DD -> time_off row
 
     off_map: dict[str, dict] = {}

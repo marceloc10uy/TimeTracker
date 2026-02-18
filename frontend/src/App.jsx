@@ -42,6 +42,12 @@ export default function App() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
+  useEffect(() => {
+    if (activeTab !== "timetracker") return;
+    loadAll(selectedDate).catch((e) => setErr(String(e)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeTab]);
+
   // Handle window resize
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
@@ -175,7 +181,7 @@ export default function App() {
           weeklyHard={weeklyHard}
           netToday={netToday}
           weekNet={weekNet}
-          loadAll={() => loadAll()}
+          loadAll={() => loadAll(selectedDate)}
           err={err}
           setErr={setErr}
         />

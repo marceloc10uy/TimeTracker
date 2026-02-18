@@ -15,7 +15,7 @@ def get_all():
 @router.post("")
 def upsert(body: RecurringHolidayCreate):
     con = get_con()
-    upsert_recurring(con, body.month, body.day, body.label)
+    upsert_recurring(con, body.date, body.label)
     items = list_recurring(con)
     con.close()
     return {"items": items}
@@ -26,4 +26,4 @@ def remove(rid: int):
     delete_recurring(con, rid)
     items = list_recurring(con)
     con.close()
-    return {"items", items}
+    return {"items": items}

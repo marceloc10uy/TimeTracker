@@ -77,7 +77,7 @@
 }
 
 .legend-color.current-day {
-  border: 2px solid white;
+  border: 2px solid yellow;
 }
 
 .weekday-headers {
@@ -115,6 +115,19 @@
   padding: 12px;
   border-left: 1px solid #e6e6e6;
   border-radius: 6px;
+}
+
+.sidebar .year-selector {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 16px;
+}
+
+.sidebar .year-selector select {
+  font-size: 16px;
+  padding: 6px 8px;
 }
 
 .sidebar h3 {
@@ -176,8 +189,12 @@
   background: #ffe6d6;
 }
 
+.day.edit-removing {
+  background-color: transparent !important;
+}
+
 .day.current-day {
-  outline: 2px solid #fff;
+  outline: 3px solid yellow;
   outline-offset: -2px;
   border-radius: 4px;
 }

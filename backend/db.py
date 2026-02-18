@@ -38,12 +38,11 @@ def init_db() -> None:
     cur.execute("""
         CREATE TABLE IF NOT EXISTS recurring_holiday (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            month INTEGER NOT NULL,
-            day INTEGER NOT NULL,
+            date TEXT NOT NULL,
             label TEXT,
-            UNIQUE(month, day)        
+            UNIQUE(date)
         )
-    """            
+    """
     )
 
     cur.execute(

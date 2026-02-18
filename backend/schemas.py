@@ -22,8 +22,7 @@ class EndAtBody(BaseModel):
     end_time: str = Field(description="HH:MM")
 
 class RecurringHolidayCreate(BaseModel):
-    month: conint(ge=1, le=32)
-    day: conint(ge=1, le=31)
+    date: str = Field(description="YYYY-MM-DD")
     label: Optional[str] = None
 
 class TimeoffCreate(BaseModel):
