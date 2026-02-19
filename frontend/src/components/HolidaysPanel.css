@@ -20,21 +20,26 @@
   text-align: center;
   padding: 0px;
   border-radius: 4px;
+  border: 1px solid transparent;
+  color: #e5e7eb;
 }
 
 .day.holiday {
   background-color: #ffcccc;
   font-weight: bold;
+  color: #1f2937;
 }
 
 .day.personal {
   background-color: #cce5ff;
   font-weight: bold;
+  color: #1f2937;
 }
 
 .day.both {
   background-color: #79ceb4;
   font-weight: bold;
+  color: #1f2937;
 }
 
 .calendar-legend {
@@ -102,6 +107,46 @@
 .holidays-container {
   display: flex;
   flex-direction: column;
+}
+
+.holidays-topbar {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 12px;
+  margin: 0 10px 12px 10px;
+}
+
+.subtabs {
+  display: flex;
+  gap: 8px;
+}
+
+.subtabs button {
+  padding: 8px 12px;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #1f2937;
+}
+
+.subtabs button.active {
+  background: #f0f7ff;
+  border-color: #9ec5fe;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.year-selector-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: 10px;
+}
+
+.year-selector-inline select {
+  padding: 6px 8px;
 }
 
 .calendar-and-sidebar {
@@ -197,6 +242,100 @@
   outline: 3px solid yellow;
   outline-offset: -2px;
   border-radius: 4px;
+}
+
+.day-number {
+  font-size: inherit;
+  line-height: normal;
+}
+
+.day-hours {
+  display: none;
+}
+
+.year-calendar.hours-mode .day {
+  padding: 4px 2px;
+  min-height: 44px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.year-calendar.hours-mode .day-number {
+  font-size: 12px;
+  line-height: 1;
+}
+
+.year-calendar.hours-mode .day-hours {
+  display: block;
+  font-size: 11px;
+  line-height: 1.1;
+  opacity: 0.9;
+  white-space: nowrap;
+}
+
+.day.work-none {
+  background-color: #e5e7eb;
+  color: #1f2937;
+}
+
+.day.work-some {
+  background-color: #fde68a;
+  color: #1f2937;
+}
+
+.day.work-soft {
+  background-color: #86efac;
+  color: #1f2937;
+}
+
+.day.work-hard {
+  background-color: #22c55e;
+  color: #1f2937;
+}
+
+.day.hours-off-holiday {
+  background-color: #93c5fd;
+  color: #1f2937;
+}
+
+.day.hours-off-personal {
+  background-color: #c4b5fd;
+  color: #1f2937;
+}
+
+.day.hours-off-both {
+  background-color: #67e8f9;
+  color: #1f2937;
+}
+
+.legend-color.work-none {
+  background-color: #e5e7eb;
+}
+
+.legend-color.work-some {
+  background-color: #fde68a;
+}
+
+.legend-color.work-soft {
+  background-color: #86efac;
+}
+
+.legend-color.work-hard {
+  background-color: #22c55e;
+}
+
+.legend-color.hours-off-holiday {
+  background-color: #93c5fd;
+}
+
+.legend-color.hours-off-personal {
+  background-color: #c4b5fd;
+}
+
+.legend-color.hours-off-both {
+  background-color: #67e8f9;
 }
 
 

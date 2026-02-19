@@ -25,8 +25,10 @@ def compute_day_summary(con: sqlite3.Connection, day_str: str, row: sqlite3.Row)
     start_time = row["start_time"] if row else None
     end_time = row["end_time"] if row else None
     break_minutes = int(row["break_minutes"]) if row and row["break_minutes"] else 0
+    break_started_at = row["break_started_at"] if row else None
 
     running = False
+    break_running = False
     gross_minutes = 0
     net_minutes = 0
 
@@ -40,6 +42,15 @@ def compute_day_summary(con: sqlite3.Connection, day_str: str, row: sqlite3.Row)
         else:
             end_dt = datetime.now()
             running = True
+            break_running = bool(break_started_at)
+
+        if break_started_at and not end_time:
+            try:
+                break_started_dt = datetime.fromisoformat(break_started_at)
+            except ValueError:
+                break_started_dt = None
+            if break_started_dt and break_started_dt > start_dt:
+                end_dt = min(end_dt, break_started_dt)
 
         gross_minutes = max(0, int((end_dt - start_dt).total_seconds() // 60))
         net_minutes = max(0, gross_minutes - break_minutes)
@@ -59,6 +70,7 @@ def compute_day_summary(con: sqlite3.Connection, day_str: str, row: sqlite3.Row)
         "gross_minutes": gross_minutes,
         "net_minutes": net_minutes,
         "running": running,
+        "break_running": break_running,
         "targets": {"daily_soft": DAILY_SOFT, "daily_hard": DAILY_HARD},
         "status": {
             "daily": daily_status,

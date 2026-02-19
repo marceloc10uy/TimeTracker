@@ -63,16 +63,29 @@ export default function App() {
       setLiveNet(day.net_minutes ?? 0);
       return;
     }
+    if (day.break_running) {
+      setLiveNet(day.net_minutes ?? 0);
+      return;
+    }
 
     const tick = () => {
       const net = computeNetMinutesLive(day.start_time, day.break_minutes);
       setLiveNet(net);
     };
 
+    // Refresh exactly on minute boundaries because UI is minute-based.
     tick();
-    const id = setInterval(tick, 1000);
-    return () => clearInterval(id);
-  }, [day?.start_time, day?.end_time, day?.break_minutes, day?.net_minutes]);
+    let minuteIntervalId = null;
+    const timeoutId = setTimeout(() => {
+      tick();
+      minuteIntervalId = setInterval(tick, 60000);
+    }, 60000 - (Date.now() % 60000));
+
+    return () => {
+      clearTimeout(timeoutId);
+      if (minuteIntervalId) clearInterval(minuteIntervalId);
+    };
+  }, [day?.start_time, day?.end_time, day?.break_running, day?.break_minutes, day?.net_minutes]);
 
   const dailySoft = day?.targets?.daily_soft ?? 0;
   const dailyHard = day?.targets?.daily_hard ?? 0;
@@ -83,7 +96,27 @@ export default function App() {
   const weeklyHard = week?.weekly_hard ?? week?.targets?.weekly_hard ?? 0;
 
   const netToday = !day?.start_time ? 0 : day.end_time ? day.net_minutes ?? 0 : liveNet;
-  const weekNet = week?.week_net_minutes ?? 0;
+
+  const weekWithLiveToday = week
+    ? {
+        ...week,
+        days: (week.days ?? []).map((d) =>
+          d.date === selectedDate
+            ? {
+                ...d,
+                net_minutes: netToday,
+                running: !!day?.start_time && !day?.end_time,
+                break_running: !!day?.break_running,
+                break_minutes: day?.break_minutes ?? d.break_minutes,
+              }
+            : d
+        ),
+      }
+    : null;
+
+  const weekNet = weekWithLiveToday
+    ? (weekWithLiveToday.days ?? []).reduce((sum, d) => sum + (d.net_minutes ?? 0), 0)
+    : 0;
 
   const startNow = async () => {
     try {
@@ -112,6 +145,30 @@ export default function App() {
   const addBreak = async (m) => {
     try {
       const d = await apiPost(`/api/day/${selectedDate}/break/add`, { minutes: m });
+      setDay(d);
+      setBreakEdit(String(d.break_minutes ?? 0));
+      const w = await apiGet(`/api/week/${selectedDate}`);
+      setWeek(w);
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  const startBreak = async () => {
+    try {
+      const d = await apiPost(`/api/day/${selectedDate}/break/start`);
+      setDay(d);
+      setBreakEdit(String(d.break_minutes ?? 0));
+      const w = await apiGet(`/api/week/${selectedDate}`);
+      setWeek(w);
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  const endBreak = async () => {
+    try {
+      const d = await apiPost(`/api/day/${selectedDate}/break/end`);
       setDay(d);
       setBreakEdit(String(d.break_minutes ?? 0));
       const w = await apiGet(`/api/week/${selectedDate}`);
@@ -162,7 +219,7 @@ export default function App() {
           day={day}
           selectedDate = {selectedDate}
           setSelectedDate={setSelectedDate}
-          week={week}
+          week={weekWithLiveToday}
           windowWidth={windowWidth}
           startEdit={startEdit}
           endEdit={endEdit}
@@ -174,6 +231,8 @@ export default function App() {
           endNow={endNow}
           addBreak={addBreak}
           subBreak={subBreak}
+          startBreak={startBreak}
+          endBreak={endBreak}
           saveManual={saveManual}
           dailySoft={dailySoft}
           dailyHard={dailyHard}

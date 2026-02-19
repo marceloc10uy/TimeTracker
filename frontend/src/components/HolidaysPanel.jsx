@@ -1,5 +1,6 @@
 import './HolidaysPanel.css';
 import React, { useEffect, useState } from 'react';
+import { minutesToHHMM } from '../time.js';
 import {
   apiGetRecurringHolidays,
   apiUpsertRecurringHoliday,
@@ -7,6 +8,7 @@ import {
   apiListTimeOff,
   apiCreateTimeOff,
   apiDeleteTimeOff,
+  apiGetCalendarYear,
 } from '../api.js';
 
 function toIsoDate(date) {
@@ -77,6 +79,7 @@ function getDaysInYear(year) {
 export default function HolidaysPanel({ year: propYear }) {
   const nowYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(propYear || nowYear);
+  const [subTab, setSubTab] = useState('holidays'); // 'holidays' | 'hours'
 
   const [editMode, setEditMode] = useState(null); // null | 'personal' | 'yearly'
   const [selected, setSelected] = useState([]);
@@ -86,6 +89,7 @@ export default function HolidaysPanel({ year: propYear }) {
   const [timeOffs, setTimeOffs] = useState([]);
   const [personalDays, setPersonalDays] = useState([]);
   const [recurringIdByYearlyKey, setRecurringIdByYearlyKey] = useState({});
+  const [calendarByDate, setCalendarByDate] = useState({});
 
   useEffect(() => {
     loadAll();
@@ -96,9 +100,14 @@ export default function HolidaysPanel({ year: propYear }) {
     try {
       const fromDate = `${selectedYear}-01-01`;
       const toDate = `${selectedYear}-12-31`;
-      const [recRes, toRes] = await Promise.all([apiGetRecurringHolidays(), apiListTimeOff(fromDate, toDate)]);
+      const [recRes, toRes, calRes] = await Promise.all([
+        apiGetRecurringHolidays(),
+        apiListTimeOff(fromDate, toDate),
+        apiGetCalendarYear(selectedYear),
+      ]);
       const rec = recRes.items || [];
       const tos = toRes.items || [];
+      const calDays = calRes.days || [];
 
       const hols = [];
       const recurringByKey = {};
@@ -128,6 +137,7 @@ export default function HolidaysPanel({ year: propYear }) {
       setTimeOffs(tos);
       setPersonalDays(pDays);
       setRecurringIdByYearlyKey(recurringByKey);
+      setCalendarByDate(Object.fromEntries(calDays.map(d => [d.date, d])));
     } catch (err) {
       console.error(err);
     }
@@ -150,6 +160,12 @@ export default function HolidaysPanel({ year: propYear }) {
   function cancelEdit() {
     setEditMode(null);
     setSelected([]);
+  }
+
+  function changeYear(y) {
+    setSelectedYear(y);
+    setRefreshSignal(s => s + 1);
+    if (y !== nowYear) cancelEdit();
   }
 
   function toggleSelection({ iso, month, day }) {
@@ -232,39 +248,66 @@ export default function HolidaysPanel({ year: propYear }) {
 
   return (
     <div className="holidays-container">
-      <CalendarLegend />
+      <div className="holidays-topbar">
+        <div className="subtabs">
+          <button
+            className={subTab === 'holidays' ? 'active' : ''}
+            onClick={() => setSubTab('holidays')}
+          >
+            Holidays
+          </button>
+          <button
+            className={subTab === 'hours' ? 'active' : ''}
+            onClick={() => setSubTab('hours')}
+          >
+            Hours Worked
+          </button>
+          <div className="year-selector-inline">
+            <label>Year</label>
+            <select value={selectedYear} onChange={e => changeYear(Number(e.target.value))}>
+              {Array.from({ length: 6 }, (_, i) => nowYear - i).map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <CalendarLegend mode={subTab} />
 
       <div className="calendar-and-sidebar">
         <CalendarView
           year={selectedYear}
           holidays={holidays}
           personalDays={personalDays}
+          calendarByDate={calendarByDate}
+          mode={subTab}
           editMode={editMode}
           selected={selected}
           onToggleDay={toggleSelection}
           editable={selectedYear === nowYear}
         />
 
-        <Sidebar
-          timeOffs={timeOffs}
-          onUpdated={() => setRefreshSignal(s => s + 1)}
-          refreshSignal={refreshSignal}
-          startEdit={startEdit}
-          cancelEdit={cancelEdit}
-          submitEdit={submitEdit}
-          editMode={editMode}
-          selectedCount={selected.length}
-          selectedYear={selectedYear}
-          nowYear={nowYear}
-          onChangeYear={(y) => { setSelectedYear(y); setRefreshSignal(s => s + 1); if (y !== nowYear) cancelEdit(); }}
-        />
+        {subTab === 'holidays' && (
+          <Sidebar
+            timeOffs={timeOffs}
+            onUpdated={() => setRefreshSignal(s => s + 1)}
+            refreshSignal={refreshSignal}
+            startEdit={startEdit}
+            cancelEdit={cancelEdit}
+            submitEdit={submitEdit}
+            editMode={editMode}
+            selectedCount={selected.length}
+            selectedYear={selectedYear}
+            nowYear={nowYear}
+          />
+        )}
       </div>
     </div>
   );
 }
 
 function Sidebar({ timeOffs = [], onUpdated, refreshSignal, startEdit, cancelEdit, submitEdit, editMode, selectedCount, selectedYear, nowYear }) {
-  const { onChangeYear } = arguments[0];
   const [tStart, setTStart] = useState('');
   const [tEnd, setTEnd] = useState('');
   const [tLabel, setTLabel] = useState('');
@@ -302,14 +345,6 @@ function Sidebar({ timeOffs = [], onUpdated, refreshSignal, startEdit, cancelEdi
 
   return (
     <aside className="sidebar">
-      <div className="year-selector">
-        <label>Year</label>
-        <select value={selectedYear} onChange={e => onChangeYear(Number(e.target.value))}>
-          {Array.from({ length: 6 }, (_, i) => nowYear - i).map(y => (
-            <option key={y} value={y}>{y}</option>
-          ))}
-        </select>
-      </div>
       <h3>Manage Holidays</h3>
 
       <section className="panel-section">
@@ -376,12 +411,12 @@ function Sidebar({ timeOffs = [], onUpdated, refreshSignal, startEdit, cancelEdi
   );
 }
 
-function CalendarView({ year, holidays, personalDays, editMode, selected, onToggleDay, editable }) {
+function CalendarView({ year, holidays, personalDays, calendarByDate, mode, editMode, selected, onToggleDay, editable }) {
   const days = getDaysInYear(year);
   const todayIso = new Date().toISOString().split('T')[0];
 
   return (
-    <div className="year-calendar">
+    <div className={`year-calendar ${mode === 'hours' ? 'hours-mode' : 'holidays-mode'}`}>
       {Array.from({ length: 12 }, (_, month) => {
         const monthDays = days.filter(d => d.getMonth() === month);
 
@@ -408,6 +443,25 @@ function CalendarView({ year, holidays, personalDays, editMode, selected, onTogg
                 const isPersonal = personalDays.includes(iso);
                 const isBoth = isHoliday && isPersonal;
                 const isToday = iso === todayIso;
+                const isFuture = iso > todayIso;
+                const cal = calendarByDate[iso];
+                const workedMinutes = typeof cal?.net_minutes === 'number' ? cal.net_minutes : 0;
+                const showHours = mode === 'hours';
+                const showHolidayColors = mode === 'holidays';
+                const hoursOffClass = mode === 'hours'
+                  ? (isBoth ? 'hours-off-both' : isHoliday ? 'hours-off-holiday' : isPersonal ? 'hours-off-personal' : '')
+                  : '';
+                const workClass = isFuture || isBoth || isHoliday || isPersonal
+                  ? ''
+                  : workedMinutes <= 0
+                    ? 'work-none'
+                    : workedMinutes >= 480
+                      ? 'work-hard'
+                      : workedMinutes >= 360
+                        ? 'work-soft'
+                        : 'work-some';
+                const offLabel = cal?.off?.label ? ` (${cal.off.label})` : '';
+                const title = `${iso}${!isFuture ? ` • Worked ${minutesToHHMM(workedMinutes)}` : ''}${cal?.off ? ` • ${cal.off.kind}${offLabel}` : ''}`;
 
                 let extraClass = '';
                 let removeClass = '';
@@ -424,17 +478,21 @@ function CalendarView({ year, holidays, personalDays, editMode, selected, onTogg
                   if (isHoliday && (!selected || !selected.includes(key))) removeClass = 'edit-removing';
                 }
 
-                const clickable = editable && !!editMode && onToggleDay;
+                const clickable = mode === 'holidays' && editable && !!editMode && onToggleDay;
+                const holidayClass = showHolidayColors ? (isBoth ? 'both' : isHoliday ? 'holiday' : isPersonal ? 'personal' : '') : '';
+                const classes = `day ${holidayClass} ${showHours ? `${hoursOffClass} ${workClass}` : ''} ${extraClass} ${removeClass} ${isToday ? 'current-day' : ''}`;
 
                 return (
                   <div
                     key={iso}
-                    className={`day ${isBoth ? 'both' : isHoliday ? 'holiday' : isPersonal ? 'personal' : ''} ${extraClass} ${removeClass} ${isToday ? 'current-day' : ''}`}
+                    className={classes}
                     onClick={() => clickable && onToggleDay({ iso, month, day: d.getDate() })}
                     role={clickable ? 'button' : undefined}
                     tabIndex={clickable ? 0 : undefined}
+                    title={title}
                   >
-                    {d.getDate()}
+                    <div className="day-number">{d.getDate()}</div>
+                    {showHours && !isFuture && <div className="day-hours">{minutesToHHMM(workedMinutes)}</div>}
                   </div>
                 );
               })}
@@ -446,25 +504,65 @@ function CalendarView({ year, holidays, personalDays, editMode, selected, onTogg
   );
 }
 
-function CalendarLegend() {
+function CalendarLegend({ mode }) {
   return (
     <div className="calendar-legend">
-      <div className="legend-item">
-        <span className="legend-color holiday"></span>
-        <span>Official holiday</span>
-      </div>
-      <div className="legend-item">
-        <span className="legend-color personal"></span>
-        <span>My holiday</span>
-      </div>
-      <div className="legend-item">
-        <span className="legend-color both"></span>
-        <span>Both</span>
-      </div>
-      <div className="legend-item">
-        <span className="legend-color current-day"></span>
-        <span>Current Day</span>
-      </div>
+      {mode === 'holidays' && (
+        <>
+          <div className="legend-item">
+            <span className="legend-color holiday"></span>
+            <span>Official holiday</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color personal"></span>
+            <span>My holiday</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color both"></span>
+            <span>Both</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color current-day"></span>
+            <span>Current Day</span>
+          </div>
+        </>
+      )}
+      {mode === 'hours' && (
+        <>
+          <div className="legend-item">
+            <span className="legend-color hours-off-holiday"></span>
+            <span>Official holiday</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color hours-off-personal"></span>
+            <span>Personal holiday</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color hours-off-both"></span>
+            <span>Both holidays</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color work-none"></span>
+            <span>0h worked</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color work-some"></span>
+            <span>Some work</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color work-soft"></span>
+            <span>Reached soft target</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color work-hard"></span>
+            <span>Reached hard target</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-color current-day"></span>
+            <span>Current Day</span>
+          </div>
+        </>
+      )}
     </div>
   );
 }

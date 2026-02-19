@@ -24,9 +24,16 @@ def init_db() -> None:
         start_time TEXT,
         end_time TEXT,
         break_minutes INTEGER NOT NULL DEFAULT 0,
+        break_started_at TEXT,
         notes TEXT
     )
     """)
+
+    # Migration-safe column add for existing DBs created before break sessions.
+    cur.execute("PRAGMA table_info(work_day)")
+    cols = {r["name"] for r in cur.fetchall()}
+    if "break_started_at" not in cols:
+        cur.execute("ALTER TABLE work_day ADD COLUMN break_started_at TEXT")
 
     cur.execute("""
     CREATE TABLE IF NOT EXISTS settings (

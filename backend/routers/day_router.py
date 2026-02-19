@@ -1,4 +1,5 @@
 from fastapi import APIRouter, HTTPException
+from datetime import datetime
 from backend.db import get_con
 from backend.schemas import MinutesBody, DayPatch, StartAtBody, EndAtBody
 from backend.time_utils import parse_date, validate_hhmm, now_hhmm, dt_for
@@ -25,7 +26,10 @@ def start_now(day_str: str):
         return { "ok": True, "message": "Already started", "start_time": row["start_time"]}
 
     cur = con.cursor()
-    cur.execute("UPDATE work_day SET start_time = ? WHERE date = ?", (now_hhmm(), day_str))
+    cur.execute(
+        "UPDATE work_day SET start_time = ?, end_time = NULL, break_started_at = NULL WHERE date = ?",
+        (now_hhmm(), day_str),
+    )
     con.commit()
 
     cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
@@ -42,7 +46,10 @@ def start_at(day_str: str, body: StartAtBody):
     con = get_con()
     _ = get_or_create_day(con, day_str)
     cur = con.cursor()
-    cur.execute("UPDATE work_day SET start_time = ?, end_time = NULL WHERE date = ?", (body.start_time, day_str))
+    cur.execute(
+        "UPDATE work_day SET start_time = ?, end_time = NULL, break_started_at = NULL WHERE date = ?",
+        (body.start_time, day_str),
+    )
     con.commit()
 
     cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
@@ -61,8 +68,22 @@ def end_now(day_str: str):
         con.close()
         raise HTTPException(400, "Day not started yer (no start_time).")
 
+    break_minutes = int(row["break_minutes"] or 0)
+    break_started_at = row["break_started_at"]
+    if break_started_at:
+        try:
+            break_started_dt = datetime.fromisoformat(break_started_at)
+        except ValueError:
+            break_started_dt = None
+        if break_started_dt:
+            extra_break = max(0, int((datetime.now() - break_started_dt).total_seconds() // 60))
+            break_minutes += extra_break
+
     cur = con.cursor()
-    cur.execute("UPDATE work_day SET end_time = ? WHERE date = ?", (now_hhmm(), day_str))
+    cur.execute(
+        "UPDATE work_day SET end_time = ?, break_minutes = ?, break_started_at = NULL WHERE date = ?",
+        (now_hhmm(), break_minutes, day_str),
+    )
     con.commit()
 
     cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
@@ -122,6 +143,77 @@ def break_add(day_str: str, body: MinutesBody):
 
     new_val = int(row["break_minutes"] or 0) + body.minutes
     cur.execute("UPDATE work_day SET break_minutes = ? WHERE date = ?", (new_val, day_str))
+    con.commit()
+
+    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    row2 = cur.fetchone()
+    out = compute_day_summary(con, day_str, row2)
+    con.close()
+    return out
+
+@router.post("/{day_str}/break/start")
+def break_start(day_str: str):
+    _ = parse_date(day_str)
+    con = get_con()
+    row = get_or_create_day(con, day_str)
+
+    if not row["start_time"]:
+        con.close()
+        raise HTTPException(400, "Day not started yet (no start_time).")
+    if row["end_time"]:
+        con.close()
+        raise HTTPException(400, "Day already ended.")
+    if row["break_started_at"]:
+        con.close()
+        raise HTTPException(400, "Break already started.")
+
+    cur = con.cursor()
+    cur.execute(
+        "UPDATE work_day SET break_started_at = ? WHERE date = ?",
+        (datetime.now().isoformat(), day_str),
+    )
+    con.commit()
+
+    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    row2 = cur.fetchone()
+    out = compute_day_summary(con, day_str, row2)
+    con.close()
+    return out
+
+@router.post("/{day_str}/break/end")
+def break_end(day_str: str):
+    _ = parse_date(day_str)
+    con = get_con()
+    row = get_or_create_day(con, day_str)
+
+    if not row["start_time"]:
+        con.close()
+        raise HTTPException(400, "Day not started yet (no start_time).")
+    if row["end_time"]:
+        con.close()
+        raise HTTPException(400, "Day already ended.")
+
+    break_started_at = row["break_started_at"]
+    if not break_started_at:
+        con.close()
+        raise HTTPException(400, "No active break to end.")
+
+    try:
+        break_started_dt = datetime.fromisoformat(break_started_at)
+    except ValueError:
+        break_started_dt = None
+
+    extra_break = 0
+    if break_started_dt:
+        extra_break = max(0, int((datetime.now() - break_started_dt).total_seconds() // 60))
+
+    new_break_minutes = int(row["break_minutes"] or 0) + extra_break
+
+    cur = con.cursor()
+    cur.execute(
+        "UPDATE work_day SET break_minutes = ?, break_started_at = NULL WHERE date = ?",
+        (new_break_minutes, day_str),
+    )
     con.commit()
 
     cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))

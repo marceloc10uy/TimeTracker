@@ -110,6 +110,8 @@ export default function TimeTrackerView({
     endNow,
     addBreak,
     subBreak,
+    startBreak,
+    endBreak,
     saveManual,
     dailySoft,
     dailyHard,
@@ -151,7 +153,7 @@ export default function TimeTrackerView({
                     {day && (
                         <div style={{ fontSize: 13, opacity: 0.85 }}>
                             {day.start_time ? `Start ${day.start_time}` : "Not started"} •{" "}
-                            {day.end_time ? `End ${day.end_time}` : "Running…"}
+                            {day.end_time ? `End ${day.end_time}` : day.break_running ? "On break…" : "Running…"}
                         </div>
                     )}
                 </div>
@@ -197,7 +199,26 @@ export default function TimeTrackerView({
                                 >
                                     End now
                                 </button>
+                                <button
+                                    onClick={startBreak}
+                                    disabled={!day?.start_time || !!day?.end_time || !!day?.break_running}
+                                    style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+                                >
+                                    Start break
+                                </button>
+                                <button
+                                    onClick={endBreak}
+                                    disabled={!day?.break_running}
+                                    style={{ padding: "10px 14px", borderRadius: 12, cursor: "pointer" }}
+                                >
+                                    End break
+                                </button>
                             </div>
+                            {day?.break_running && (
+                                <div style={{ marginTop: 8, fontSize: 13, opacity: 0.85 }}>
+                                    Break in progress. Work timer paused.
+                                </div>
+                            )}
 
                             <div
                                 style={{
@@ -337,3 +358,4 @@ export default function TimeTrackerView({
         </div>
     );
 }
+

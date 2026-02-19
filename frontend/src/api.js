@@ -91,3 +91,7 @@ export async function apiDeleteTimeOff(id) {
     return apiDelete(`/api/time-off/${id}`);
 }
 
+export async function apiGetCalendarYear(year) {
+    return apiGet(`/api/calendar/year/${year}`);
+}
+
