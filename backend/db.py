@@ -1,7 +1,8 @@
 import sqlite3
+from pathlib import Path
 from fastapi import HTTPException
 
-DB_PATH = "timetracker.db"
+DB_PATH = str(Path(__file__).resolve().parent.parent / "timetracker.db")
 
 DEFAULT_SETTINGS = {
     "daily_soft_minutes": "360", # 6h
@@ -117,3 +118,5 @@ def get_targets(con: sqlite3.Connection) -> dict[str, int]:
         "weekly_soft": weekly_soft,
         "weekly_hard": weekly_hard
     }
+
+
