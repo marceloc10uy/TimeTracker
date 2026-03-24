@@ -1,7 +1,6 @@
 from datetime import date, timedelta
-import sqlite3
 
-from backend.time_utils import parse_date
+from backend.time_utils import parse_date, normalize_date
 from backend.services.day_service import compute_day_summary
 from backend.services.recurring_holiday_service import list_recurring
 from backend.services.timeoff_service import expand_time_off_days
@@ -13,21 +12,21 @@ def _year_bounds(year: int) -> tuple[date, date]:
     return start, end
 
 
-def _fetch_day_rows_for_range(con: sqlite3.Connection, start: date, end: date) -> dict[str, sqlite3.Row]:
+def _fetch_day_rows_for_range(con, start: date, end: date) -> dict[str, dict]:
     cur = con.cursor()
     cur.execute(
         """
         SELECT *
         FROM work_day
-        WHERE date >= ? AND date <= ?
+        WHERE date >= %s AND date <= %s
         """,
         (start.isoformat(), end.isoformat()),
     )
     rows = cur.fetchall()
-    return {r["date"]: r for r in rows}
+    return {normalize_date(r["date"]): r for r in rows}
 
 
-def compute_year_calendar(con: sqlite3.Connection, year: int) -> dict:
+def compute_year_calendar(con, year: int) -> dict:
     start, end = _year_bounds(year)
 
     rec_items = list_recurring(con)

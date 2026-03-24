@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiGet, apiPatch, apiPost } from "./api";
 import { computeNetMinutesLive, minutesToHHMM, todayISO } from "./time";
 import HolidaysPanel from "./components/HolidaysPanel";
@@ -21,6 +21,7 @@ export default function App() {
 
   // live counter state
   const [liveNet, setLiveNet] = useState(0);
+  const prevActiveTab = useRef(activeTab);
 
   const loadAll = async (dateStr) => {
     setErr("");
@@ -43,6 +44,10 @@ export default function App() {
   }, [selectedDate]);
 
   useEffect(() => {
+    const previousTab = prevActiveTab.current;
+    prevActiveTab.current = activeTab;
+
+    if (previousTab === activeTab) return;
     if (activeTab !== "timetracker") return;
     loadAll(selectedDate).catch((e) => setErr(String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -44,7 +44,19 @@ def api_patch_settings(body: SettingsPatch):
 
     if updates:
         upsert_settings(con, updates)
+        con.commit()
 
-    out = api_get_settings
+    s = get_settings(con)
+    t = get_targets(con)
     con.close()
-    return out
+    return {
+        "settings": {
+            "daily_soft_minutes": int(s["daily_soft_minutes"]),
+            "daily_hard_minutes": int(s["daily_hard_minutes"]),
+            "workdays_per_week": int(s["workdays_per_week"]),
+        },
+        "derived": {
+            "weekly_soft_minutes": t["weekly_soft"],
+            "weekly_hard_minutes": t["weekly_hard"],
+        }
+    }

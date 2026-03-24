@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from backend.db import get_con
 from backend.schemas import MinutesBody, DayPatch, StartAtBody, EndAtBody
-from backend.time_utils import parse_date, validate_hhmm, now_hhmm, dt_for
+from backend.time_utils import parse_date, validate_hhmm, now_hhmm, dt_for, normalize_hhmm
 from backend.services.day_service import get_or_create_day, compute_day_summary
 
 router = APIRouter(prefix="/api/day", tags=["day"])
@@ -23,16 +23,16 @@ def start_now(day_str: str):
 
     if row["start_time"]:
         con.close()
-        return { "ok": True, "message": "Already started", "start_time": row["start_time"]}
+        return { "ok": True, "message": "Already started", "start_time": normalize_hhmm(row["start_time"])}
 
     cur = con.cursor()
     cur.execute(
-        "UPDATE work_day SET start_time = ?, end_time = NULL, break_started_at = NULL WHERE date = ?",
+        "UPDATE work_day SET start_time = %s, end_time = NULL, break_started_at = NULL WHERE date = %s",
         (now_hhmm(), day_str),
     )
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -47,12 +47,12 @@ def start_at(day_str: str, body: StartAtBody):
     _ = get_or_create_day(con, day_str)
     cur = con.cursor()
     cur.execute(
-        "UPDATE work_day SET start_time = ?, end_time = NULL, break_started_at = NULL WHERE date = ?",
+        "UPDATE work_day SET start_time = %s, end_time = NULL, break_started_at = NULL WHERE date = %s",
         (body.start_time, day_str),
     )
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row = cur.fetchone()
     out = compute_day_summary(con, day_str, row)
     con.close()
@@ -81,12 +81,12 @@ def end_now(day_str: str):
 
     cur = con.cursor()
     cur.execute(
-        "UPDATE work_day SET end_time = ?, break_minutes = ?, break_started_at = NULL WHERE date = ?",
+        "UPDATE work_day SET end_time = %s, break_minutes = %s, break_started_at = NULL WHERE date = %s",
         (now_hhmm(), break_minutes, day_str),
     )
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -110,25 +110,25 @@ def end_at(day_str: str, body: EndAtBody):
         raise HTTPException(400, "End time cannot be earlier than start time (no midnight crossing).")
 
     cur = con.cursor()
-    cur.execute("UPDATE work)daty SET end_time = ? WHERE date = ?", (body.end_time, day_str))
+    cur.execute("UPDATE work_day SET end_time = %s WHERE date = %s", (body.end_time, day_str))
     con.commit()
 
-    cur.execute("SELECT * FROM work_dayWHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
     return out
 
-@router.post("/{day-str}/clear-end")
+@router.post("/{day_str}/clear-end")
 def clear_end(day_str: str):
     _ = parse_date(day_str)
     con = get_con()
     _ = get_or_create_day(con, day_str)
     cur = con.cursor()
-    cur.execute("UPDATE work_day SET end_time = NULL WHERE date = ?", (day_str,))
+    cur.execute("UPDATE work_day SET end_time = NULL WHERE date = %s", (day_str,))
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row = cur.fetchone()
     out = compute_day_summary(con, day_str, row)
     con.close()
@@ -142,10 +142,10 @@ def break_add(day_str: str, body: MinutesBody):
     cur = con.cursor()
 
     new_val = int(row["break_minutes"] or 0) + body.minutes
-    cur.execute("UPDATE work_day SET break_minutes = ? WHERE date = ?", (new_val, day_str))
+    cur.execute("UPDATE work_day SET break_minutes = %s WHERE date = %s", (new_val, day_str))
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -169,12 +169,12 @@ def break_start(day_str: str):
 
     cur = con.cursor()
     cur.execute(
-        "UPDATE work_day SET break_started_at = ? WHERE date = ?",
+        "UPDATE work_day SET break_started_at = %s WHERE date = %s",
         (datetime.now().isoformat(), day_str),
     )
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -211,12 +211,12 @@ def break_end(day_str: str):
 
     cur = con.cursor()
     cur.execute(
-        "UPDATE work_day SET break_minutes = ?, break_started_at = NULL WHERE date = ?",
+        "UPDATE work_day SET break_minutes = %s, break_started_at = NULL WHERE date = %s",
         (new_break_minutes, day_str),
     )
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -230,10 +230,10 @@ def break_subtract(day_str: str, body: MinutesBody):
     cur = con.cursor()
 
     new_val = max(0, int(row["break_minutes"] or 0) - body.minutes)
-    cur.execute("UPDATE work_day SET break_minutes = ? WHERE date = ?" , (new_val, day_str))
+    cur.execute("UPDATE work_day SET break_minutes = %s WHERE date = %s" , (new_val, day_str))
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2= cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()
@@ -267,14 +267,14 @@ def patch_day(day_str: str, body: DayPatch):
     vals = []
 
     for key, value in data.items():
-        fields.append(f"{key} = ?")
+        fields.append(f"{key} = %s")
         vals.append(value)
 
     vals.append(day_str)
-    cur.execute(f"UPDATE work_day SET {', '.join(fields)} WHERE date = ?", vals)
+    cur.execute(f"UPDATE work_day SET {', '.join(fields)} WHERE date = %s", vals)
     con.commit()
 
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row2 = cur.fetchone()
     out = compute_day_summary(con, day_str, row2)
     con.close()

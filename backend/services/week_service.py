@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 from datetime import date, timedelta
-import sqlite3
 
-from backend.time_utils import parse_date
+from backend.time_utils import parse_date, normalize_date
 from backend.db import get_settings
 
 from backend.services.day_service import compute_day_summary
@@ -24,7 +23,7 @@ def _ceil_div(a: int, b: int) -> int:
     return (a + b - 1) // b
 
 
-def _fetch_day_rows_for_range(con: sqlite3.Connection, start: date, end: date) -> dict[str, sqlite3.Row | dict]:
+def _fetch_day_rows_for_range(con, start: date, end: date) -> dict[str, dict]:
     """
     Fetch all stored day rows for dates in [start, end] in ONE query.
     Returns: map YYYY-MM-DD -> row
@@ -38,7 +37,7 @@ def _fetch_day_rows_for_range(con: sqlite3.Connection, start: date, end: date) -
         """
         SELECT *
         FROM work_day
-        WHERE date >= ? AND date <= ?
+        WHERE date >= %s AND date <= %s
         """,
         (start.isoformat(), end.isoformat()),
     )
@@ -46,12 +45,11 @@ def _fetch_day_rows_for_range(con: sqlite3.Connection, start: date, end: date) -
 
     out = {}
     for r in rows:
-        # If your column is named 'day' use r["day"]. If it's 'date' use r["date"].
-        out[r["date"]] = r
+        out[normalize_date(r["date"])] = r
     return out
 
 
-def compute_week(con: sqlite3.Connection, day_str: str) -> dict:
+def compute_week(con, day_str: str) -> dict:
     week_start, week_end = _week_bounds(day_str)
 
     # Settings (your project uses *_minutes keys)

@@ -1,29 +1,28 @@
-import sqlite3
 from datetime import datetime
 from fastapi import HTTPException
 from backend.db import get_targets
-from backend.time_utils import parse_date, dt_for
+from backend.time_utils import parse_date, dt_for, normalize_hhmm
 
 
-def get_or_create_day(con: sqlite3.Connection, day_str: str) -> sqlite3.Row:
+def get_or_create_day(con, day_str: str) -> dict | None:
     cur = con.cursor()
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row = cur.fetchone()
     if row:
         return row
-    cur.execute("INSERT INTO work_day(date) VALUES (?)", (day_str,))
+    cur.execute("INSERT INTO work_day(date) VALUES (%s)", (day_str,))
     con.commit()
-    cur.execute("SELECT * FROM work_day WHERE date = ?", (day_str,))
+    cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     return cur.fetchone()
 
-def compute_day_summary(con: sqlite3.Connection, day_str: str, row: sqlite3.Row) -> dict[str, any]:
+def compute_day_summary(con, day_str: str, row: dict | None) -> dict[str, any]:
     targets = get_targets(con)
     DAILY_SOFT = targets["daily_soft"]
     DAILY_HARD = targets["daily_hard"]
 
     day = parse_date(day_str)
-    start_time = row["start_time"] if row else None
-    end_time = row["end_time"] if row else None
+    start_time = normalize_hhmm(row["start_time"]) if row and row["start_time"] is not None else None
+    end_time = normalize_hhmm(row["end_time"]) if row and row["end_time"] is not None else None
     break_minutes = int(row["break_minutes"]) if row and row["break_minutes"] else 0
     break_started_at = row["break_started_at"] if row else None
 

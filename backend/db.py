@@ -1,7 +1,8 @@
 import os
-import sqlite3
-from pathlib import Path
 from fastapi import HTTPException
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Supabase (PostgreSQL) is required
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -24,7 +25,9 @@ DEFAULT_SETTINGS = {
 def get_con():
     """Get PostgreSQL (Supabase) database connection"""
     import psycopg2
-    con = psycopg2.connect(DATABASE_URL)
+    from psycopg2.extras import RealDictCursor
+
+    con = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
     con.autocommit = False
     return con
 
@@ -91,7 +94,7 @@ def get_settings(con) -> dict[str, str]:
     
     cur.execute("SELECT key, value FROM settings")
     rows = cur.fetchall()
-    out = {r[0]: r[1] for r in rows}
+    out = {r["key"]: r["value"] for r in rows}
     
     # Ensure defaults exist even if DB got weird
     for k, v in DEFAULT_SETTINGS.items():
