@@ -23,6 +23,23 @@ if [ ! -x "$VENV_PY" ]; then
 fi
 
 echo "Checking backend dependencies..."
+if ! "$VENV_PY" -m pip --version >/dev/null 2>&1; then
+  echo "Bootstrapping pip in virtual environment..."
+  "$VENV_PY" -m ensurepip --upgrade >/dev/null 2>&1 || true
+fi
+
+if ! "$VENV_PY" -m pip --version >/dev/null 2>&1; then
+  echo "Existing virtual environment is broken. Recreating..."
+  rm -rf .venv
+  python3 -m venv .venv
+fi
+
+if ! "$VENV_PY" -m pip --version >/dev/null 2>&1; then
+  echo "Virtual environment pip is still unavailable after recreation."
+  echo "Please install pip for this Python or check your Python installation."
+  exit 1
+fi
+
 "$VENV_PY" -m pip install --quiet --upgrade pip
 if ! "$VENV_PY" -c "import fastapi, uvicorn, psycopg2, dotenv" >/dev/null 2>&1; then
   echo "Installing missing backend dependencies..."
