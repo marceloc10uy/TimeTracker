@@ -25,6 +25,15 @@ def normalize_hhmm(value) -> str:
         return value.strftime("%H:%M")
     raise HTTPException(400, "Invalid time format. Use HH:MM (24h).")
 
+def normalize_datetime(value):
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value
+    if isinstance(value, str):
+        return datetime.fromisoformat(value)
+    raise HTTPException(400, "Invalid datetime format.")
+
 def validate_hhmm(s) -> None:
     try:
         datetime.strptime(normalize_hhmm(s), "%H:%M")

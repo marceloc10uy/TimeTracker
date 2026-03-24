@@ -2,7 +2,7 @@ from typing import Any, Optional
 from datetime import datetime
 from fastapi import HTTPException
 from backend.db import get_targets
-from backend.time_utils import parse_date, dt_for, normalize_hhmm
+from backend.time_utils import parse_date, dt_for, normalize_datetime, normalize_hhmm
 
 
 def get_or_create_day(con, day_str: str) -> Optional[dict]:
@@ -46,8 +46,8 @@ def compute_day_summary(con, day_str: str, row: Optional[dict], targets: Optiona
 
         if break_started_at and not end_time:
             try:
-                break_started_dt = datetime.fromisoformat(break_started_at)
-            except ValueError:
+                break_started_dt = normalize_datetime(break_started_at)
+            except (TypeError, ValueError):
                 break_started_dt = None
             if break_started_dt and break_started_dt > start_dt:
                 end_dt = min(end_dt, break_started_dt)

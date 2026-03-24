@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from datetime import datetime
 from backend.db import get_con
 from backend.schemas import MinutesBody, DayPatch, StartAtBody, EndAtBody
-from backend.time_utils import parse_date, validate_hhmm, now_hhmm, dt_for, normalize_hhmm
+from backend.time_utils import parse_date, validate_hhmm, now_hhmm, dt_for, normalize_datetime, normalize_hhmm
 from backend.services.day_service import get_or_create_day, compute_day_summary
 
 router = APIRouter(prefix="/api/day", tags=["day"])
@@ -72,8 +72,8 @@ def end_now(day_str: str):
     break_started_at = row["break_started_at"]
     if break_started_at:
         try:
-            break_started_dt = datetime.fromisoformat(break_started_at)
-        except ValueError:
+            break_started_dt = normalize_datetime(break_started_at)
+        except (TypeError, ValueError):
             break_started_dt = None
         if break_started_dt:
             extra_break = max(0, int((datetime.now() - break_started_dt).total_seconds() // 60))
@@ -199,8 +199,8 @@ def break_end(day_str: str):
         raise HTTPException(400, "No active break to end.")
 
     try:
-        break_started_dt = datetime.fromisoformat(break_started_at)
-    except ValueError:
+        break_started_dt = normalize_datetime(break_started_at)
+    except (TypeError, ValueError):
         break_started_dt = None
 
     extra_break = 0
