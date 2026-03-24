@@ -1,8 +1,19 @@
+import os
 import sqlite3
 from pathlib import Path
 from fastapi import HTTPException
 
-DB_PATH = str(Path(__file__).resolve().parent.parent / "timetracker.db")
+# Supabase (PostgreSQL) is required
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError(
+        "DATABASE_URL environment variable is required!\n"
+        "Please set it in your .env file with your Supabase connection string.\n"
+        "Get it from: Supabase Console → Settings → Database → Connection String (Session Pooler)"
+    )
+
+DB_TYPE = "postgres"
 
 DEFAULT_SETTINGS = {
     "daily_soft_minutes": "360", # 6h
@@ -10,15 +21,19 @@ DEFAULT_SETTINGS = {
     "workdays_per_week": 5 # Mon-Fri
 }
 
-def get_con() -> sqlite3.Connection:
-    con = sqlite3.connect(DB_PATH)
-    con.row_factory = sqlite3.Row
+def get_con():
+    """Get PostgreSQL (Supabase) database connection"""
+    import psycopg2
+    con = psycopg2.connect(DATABASE_URL)
+    con.autocommit = False
     return con
 
 def init_db() -> None:
+    """Initialize Supabase PostgreSQL database"""
     con = get_con()
     cur = con.cursor()
-
+    
+    # Create work_day table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS work_day (
         date TEXT PRIMARY KEY,
@@ -29,72 +44,73 @@ def init_db() -> None:
         notes TEXT
     )
     """)
-
-    # Migration-safe column add for existing DBs created before break sessions.
-    cur.execute("PRAGMA table_info(work_day)")
-    cols = {r["name"] for r in cur.fetchall()}
-    if "break_started_at" not in cols:
-        cur.execute("ALTER TABLE work_day ADD COLUMN break_started_at TEXT")
-
+    
+    # Create settings table
     cur.execute("""
     CREATE TABLE IF NOT EXISTS settings (
-    key TEXT PRIMARY KEY,
-    value TEXT NOT NULL
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL
     )
     """)
-
+    
+    # Create recurring_holiday table
     cur.execute("""
-        CREATE TABLE IF NOT EXISTS recurring_holiday (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT NOT NULL,
-            label TEXT,
-            UNIQUE(date)
-        )
-    """
+    CREATE TABLE IF NOT EXISTS recurring_holiday (
+        id SERIAL PRIMARY KEY,
+        date TEXT NOT NULL,
+        label TEXT,
+        UNIQUE(date)
     )
-
-    cur.execute(
-    """ 
-        CREATE TABLE IF NOT EXISTS time_off (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            start_date TEXT NOT NULL,
-            end_date TEXT NOT NULL,
-            kind TEXT NOT NULL,
-            label TEXT
-        )
     """)
-
+    
+    # Create time_off table
+    cur.execute("""
+    CREATE TABLE IF NOT EXISTS time_off (
+        id SERIAL PRIMARY KEY,
+        start_date TEXT NOT NULL,
+        end_date TEXT NOT NULL,
+        kind TEXT NOT NULL,
+        label TEXT
+    )
+    """)
+    
     # Seed defaults if missing
     for k, v in DEFAULT_SETTINGS.items():
         cur.execute(
-            "INSERT INTO settings(key, value) VALUES(?, ?) "
-            "ON CONFLICT (key) DO NOTHING",
-            (k, v),
+            """INSERT INTO settings(key, value) VALUES(%s, %s) 
+               ON CONFLICT (key) DO NOTHING""",
+            (k, str(v)),
         )
     con.commit()
+    cur.close()
     con.close()
 
-def get_settings(con: sqlite3.Connection) -> dict[str, str]:
+def get_settings(con) -> dict[str, str]:
+    """Get settings from PostgreSQL (Supabase)"""
     cur = con.cursor()
+    
     cur.execute("SELECT key, value FROM settings")
     rows = cur.fetchall()
-    out = {r["key"]: r["value"] for r in rows }
-    #ensure defaults exist even if DB got weird
+    out = {r[0]: r[1] for r in rows}
+    
+    # Ensure defaults exist even if DB got weird
     for k, v in DEFAULT_SETTINGS.items():
-        out.setdefault(k, v)
+        out.setdefault(k, str(v))
     return out
 
-def upsert_settings(con: sqlite3.Connection, updates: dict[str, str]) -> None:
+def upsert_settings(con, updates: dict[str, str]) -> None:
+    """Upsert settings to PostgreSQL (Supabase)"""
     cur = con.cursor()
+    
     for k, v in updates.items():
         cur.execute(
-            "INSERT INTO settings(key, value) VALUES (?, ?) "
-            "ON CONFLICT(key) DO UPDATE SET value=excluded.value",
+            """INSERT INTO settings(key, value) VALUES(%s, %s)
+               ON CONFLICT(key) DO UPDATE SET value=EXCLUDED.value""",
             (k, v),
         )
 
 
-def get_targets(con: sqlite3.Connection) -> dict[str, int]:
+def get_targets(con) -> dict[str, int]:
     s = get_settings(con)
     try:
         daily_soft = int(s["daily_soft_minutes"])
