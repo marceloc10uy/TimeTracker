@@ -22,14 +22,45 @@ DEFAULT_SETTINGS = {
     "workdays_per_week": 5 # Mon-Fri
 }
 
+_POOL = None
+
+
+class PooledConnection:
+    def __init__(self, pool, con):
+        self._pool = pool
+        self._con = con
+
+    def __getattr__(self, name):
+        return getattr(self._con, name)
+
+    def close(self):
+        try:
+            self._con.rollback()
+        except Exception:
+            pass
+        self._pool.putconn(self._con)
+
+
+def _get_pool():
+    global _POOL
+    if _POOL is None:
+        from psycopg2.extras import RealDictCursor
+        from psycopg2.pool import SimpleConnectionPool
+
+        _POOL = SimpleConnectionPool(
+            minconn=1,
+            maxconn=5,
+            dsn=DATABASE_URL,
+            cursor_factory=RealDictCursor,
+        )
+    return _POOL
+
 def get_con():
     """Get PostgreSQL (Supabase) database connection"""
-    import psycopg2
-    from psycopg2.extras import RealDictCursor
-
-    con = psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+    pool = _get_pool()
+    con = pool.getconn()
     con.autocommit = False
-    return con
+    return PooledConnection(pool, con)
 
 def init_db() -> None:
     """Initialize Supabase PostgreSQL database"""

@@ -16,8 +16,8 @@ def get_or_create_day(con, day_str: str) -> Optional[dict]:
     cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     return cur.fetchone()
 
-def compute_day_summary(con, day_str: str, row: Optional[dict]) -> dict[str, Any]:
-    targets = get_targets(con)
+def compute_day_summary(con, day_str: str, row: Optional[dict], targets: Optional[dict] = None) -> dict[str, Any]:
+    targets = targets or get_targets(con)
     DAILY_SOFT = targets["daily_soft"]
     DAILY_HARD = targets["daily_hard"]
 

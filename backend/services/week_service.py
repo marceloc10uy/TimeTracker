@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, timedelta
 
 from backend.time_utils import parse_date, normalize_date
-from backend.db import get_settings
+from backend.db import get_targets
 
 from backend.services.day_service import compute_day_summary
 from backend.services.recurring_holiday_service import list_recurring
@@ -53,9 +53,9 @@ def compute_week(con, day_str: str) -> dict:
     week_start, week_end = _week_bounds(day_str)
 
     # Settings (your project uses *_minutes keys)
-    settings = get_settings(con)
-    daily_soft = int(settings["daily_soft_minutes"])
-    daily_hard = int(settings["daily_hard_minutes"])
+    targets = get_targets(con)
+    daily_soft = targets["daily_soft"]
+    daily_hard = targets["daily_hard"]
 
     # --- OFF MAP (recurring + personal) ---
     rec_items = list_recurring(con)  # {id, date, label}
@@ -107,7 +107,7 @@ def compute_week(con, day_str: str) -> dict:
         ds = d.isoformat()
 
         row = row_map.get(ds)  # may be None if not stored yet
-        summary = compute_day_summary(con, ds, row)
+        summary = compute_day_summary(con, ds, row, targets)
 
         off_info = off_map.get(ds)
         is_off = off_info is not None

@@ -1,9 +1,9 @@
 from datetime import datetime, date, timedelta, time
 from fastapi import HTTPException
 
-def parse_date(s: str) -> date:
+def parse_date(s) -> date:
     try:
-        return datetime.strptime(s, "%Y-%m-%d").date()
+        return datetime.strptime(normalize_date(s), "%Y-%m-%d").date()
     except ValueError:
         raise HTTPException(400, "Invalid date format. Use YYYY-MM-DD.")
 

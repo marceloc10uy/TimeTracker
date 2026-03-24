@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { apiGet, apiPatch, apiPost } from "./api";
+import { apiGet, apiGetDashboard, apiPatch, apiPost } from "./api";
 import { computeNetMinutesLive, minutesToHHMM, todayISO } from "./time";
 import HolidaysPanel from "./components/HolidaysPanel";
 import TimeTrackerView from "./components/TimeTrackerView";
@@ -25,17 +25,13 @@ export default function App() {
 
   const loadAll = async (dateStr) => {
     setErr("");
-    const [d, w, s] = await Promise.all([
-      apiGet(`/api/day/${dateStr}`),
-      apiGet(`/api/week/${dateStr}`),
-      apiGet(`/api/settings`),
-    ]);
-    setDay(d);
-    setWeek(w);
-    setSettings(s);
-    setStartEdit(d.start_time ?? "");
-    setEndEdit(d.end_time ?? "");
-    setBreakEdit(String(d.break_minutes ?? 0));
+    const data = await apiGetDashboard(dateStr);
+    setDay(data.day);
+    setWeek(data.week);
+    setSettings(data.settings);
+    setStartEdit(data.day.start_time ?? "");
+    setEndEdit(data.day.end_time ?? "");
+    setBreakEdit(String(data.day.break_minutes ?? 0));
   };
 
   useEffect(() => {

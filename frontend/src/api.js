@@ -40,6 +40,10 @@ export async function apiGet(path) {
     return logFetch("GET", path)
 }
 
+export async function apiGetDashboard(dateStr) {
+    return apiGet(`/api/dashboard/${dateStr}`);
+}
+
 export async function apiPost(path, body) {
     return logFetch("POST", path, {
         method: "POST",

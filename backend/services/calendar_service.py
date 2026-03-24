@@ -1,5 +1,6 @@
 from datetime import date, timedelta
 
+from backend.db import get_targets
 from backend.time_utils import parse_date, normalize_date
 from backend.services.day_service import compute_day_summary
 from backend.services.recurring_holiday_service import list_recurring
@@ -67,13 +68,14 @@ def compute_year_calendar(con, year: int) -> dict:
         d += timedelta(days=1)
 
     row_map = _fetch_day_rows_for_range(con, start, end)
+    targets = get_targets(con)
 
     days: list[dict] = []
     d = start
     while d <= end:
         ds = d.isoformat()
         row = row_map.get(ds)
-        summary = compute_day_summary(con, ds, row)
+        summary = compute_day_summary(con, ds, row, targets)
         off_info = off_map.get(ds)
 
         summary["is_off"] = off_info is not None

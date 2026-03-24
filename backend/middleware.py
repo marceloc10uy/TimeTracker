@@ -5,7 +5,6 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 LOG_BODY = os.getenv("LOG_BODY", "0") == "1"
-DEBUG_ERRORS = os.getenv("DEBUG_ERRORS", "1") == "1"
 
 def add_request_logging(app):
     @app.middleware("http")
@@ -22,7 +21,7 @@ def add_request_logging(app):
 
         try:
             response = await call_next(request)
-        except Exception as exc:
+        except Exception:
             ms = (time.time() - start) * 1000
             logging.exception(
                 "Unhandled exception | %s %s | %.1fms | body=%s",
@@ -31,10 +30,7 @@ def add_request_logging(app):
                 ms,
                 body_bytes.decode("utf-8", errors="ignore") if LOG_BODY else "",
             )
-            detail = "Internal server error"
-            if DEBUG_ERRORS:
-                detail = f"{type(exc).__name__}: {exc}"
-            return JSONResponse(status_code=500, content={"detail": detail})
+            return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
         ms = (time.time() - start) * 1000
         logging.info(
