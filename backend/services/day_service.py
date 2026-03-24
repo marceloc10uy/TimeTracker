@@ -1,10 +1,11 @@
+from typing import Any, Optional
 from datetime import datetime
 from fastapi import HTTPException
 from backend.db import get_targets
 from backend.time_utils import parse_date, dt_for, normalize_hhmm
 
 
-def get_or_create_day(con, day_str: str) -> dict | None:
+def get_or_create_day(con, day_str: str) -> Optional[dict]:
     cur = con.cursor()
     cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     row = cur.fetchone()
@@ -15,7 +16,7 @@ def get_or_create_day(con, day_str: str) -> dict | None:
     cur.execute("SELECT * FROM work_day WHERE date = %s", (day_str,))
     return cur.fetchone()
 
-def compute_day_summary(con, day_str: str, row: dict | None) -> dict[str, any]:
+def compute_day_summary(con, day_str: str, row: Optional[dict]) -> dict[str, Any]:
     targets = get_targets(con)
     DAILY_SOFT = targets["daily_soft"]
     DAILY_HARD = targets["daily_hard"]
