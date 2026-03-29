@@ -16,6 +16,21 @@ Those should stay outside the app bundle.
 
 ## Build on a Mac
 
+If you want a real installer that places the app in `/Applications`, run:
+
+```bash
+chmod +x build_macos_pkg.command
+./build_macos_pkg.command
+```
+
+Output:
+
+```bash
+dist/TimeTracker.pkg
+```
+
+If you only want the raw app bundle:
+
 From the project root:
 
 ```bash
@@ -37,15 +52,15 @@ If you do not want to build on your own Mac, this repo now includes a GitHub Act
 .github/workflows/build-macos-app.yml
 ```
 
-You can push the repo to GitHub and run the `Build macOS app` workflow from the Actions tab, or let it run automatically on `main` and pull requests.
+You can push the repo to GitHub and run the `Build macOS installer` workflow from the Actions tab, or let it run automatically on `main` and pull requests.
 
 Artifact output:
 
 ```bash
-TimeTracker-macos.zip
+TimeTracker.pkg
 ```
 
-That artifact contains the generated `TimeTracker.app` bundle built on GitHub's macOS runner.
+The workflow also uploads `TimeTracker-macos.zip` and `TimeTracker.app`, but `TimeTracker.pkg` is the main installer artifact built on GitHub's macOS runner.
 
 ## Runtime config
 
@@ -66,4 +81,5 @@ Recommended location:
 
 - This is packaging/obscurity, not strong source-code protection.
 - The frontend source is not needed at runtime; only the built `dist` assets are bundled.
+- The `.pkg` installs `TimeTracker.app` into `/Applications`.
 - If you want stronger protection later, the next step would be code signing, notarization, and moving secrets/data fully outside the bundle.

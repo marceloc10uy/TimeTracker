@@ -1,4 +1,4 @@
-name: Build macOS app
+name: Build macOS installer
 
 on:
   workflow_dispatch:
@@ -28,18 +28,19 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Make scripts executable
-        run: chmod +x build_macos_app.command
+        run: chmod +x build_macos_app.command build_macos_pkg.command
 
-      - name: Build app bundle
-        run: ./build_macos_app.command
+      - name: Build installer package
+        run: ./build_macos_pkg.command
 
       - name: Archive app bundle
         run: ditto -c -k --sequesterRsrc --keepParent dist/TimeTracker.app dist/TimeTracker-macos.zip
 
-      - name: Upload app artifact
+      - name: Upload installer artifact
         uses: actions/upload-artifact@v6
         with:
-          name: TimeTracker-macos-app
+          name: TimeTracker-macos-installer
           path: |
+            dist/TimeTracker.pkg
             dist/TimeTracker-macos.zip
             dist/TimeTracker.app
