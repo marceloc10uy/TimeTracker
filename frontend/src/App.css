@@ -1,12 +1,59 @@
 #root {
   margin: 0;
-  
-  /* padding: 2rem; */
-  text-align: center; 
+  min-height: 100vh;
+  text-align: center;
 }
 
 body {
   margin: 0;
+}
+
+.app-shell {
+  min-height: 100vh;
+  position: relative;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.12);
+  pointer-events: none;
+}
+
+.loading-overlay__spinner {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 3px solid rgba(15, 23, 42, 0.18);
+  border-top-color: #0f172a;
+  animation: app-spinner 0.8s linear infinite;
+}
+
+.loading-overlay__label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+@keyframes app-spinner {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .logo {

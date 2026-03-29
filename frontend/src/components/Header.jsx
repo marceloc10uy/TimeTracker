@@ -1,4 +1,4 @@
-export default function Header({ activeTab, setActiveTab }) {
+export default function Header({ activeTab, setActiveTab, testFrontendSentry, testBackendSentry, frontendSentryStatus }) {
 
     return (
         <div style={{ width: "100vw", marginTop: 30  }}>
@@ -30,6 +30,42 @@ export default function Header({ activeTab, setActiveTab }) {
                     }}
                 >
                     Holidays
+                </button>
+            </div>
+
+            <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 14, flexWrap: "wrap" }}>
+                <div style={{
+                    padding: "8px 14px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(0,0,0,0.15)",
+                    background: "rgba(0,0,0,0.04)",
+                    fontSize: 13,
+                }}>
+                    Frontend Sentry: {frontendSentryStatus?.enabled ? "enabled" : frontendSentryStatus?.dsnPresent ? "dsn found, not initialized" : "disabled"}
+                </div>
+                <button
+                    onClick={testFrontendSentry}
+                    style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid rgba(180,0,0,0.35)",
+                        background: "rgba(180,0,0,0.08)",
+                        cursor: "pointer",
+                    }}
+                >
+                    Test Frontend Sentry
+                </button>
+                <button
+                    onClick={testBackendSentry}
+                    style={{
+                        padding: "8px 14px",
+                        borderRadius: 8,
+                        border: "1px solid rgba(180,0,0,0.35)",
+                        background: "rgba(180,0,0,0.08)",
+                        cursor: "pointer",
+                    }}
+                >
+                    Test Backend Sentry
                 </button>
             </div>
         </div>

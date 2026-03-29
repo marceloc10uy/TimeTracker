@@ -1,0 +1,6 @@
+fastapi
+psycopg2-binary
+pyinstaller
+python-dotenv
+sentry-sdk[fastapi]
+uvicorn

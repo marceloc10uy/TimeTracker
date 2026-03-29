@@ -1,8 +1,39 @@
 import os
+import sys
+import logging
 from fastapi import HTTPException
 from dotenv import load_dotenv
 
-load_dotenv()
+def _load_env() -> None:
+    candidates = []
+
+    if getattr(sys, "frozen", False):
+        exe_dir = os.path.dirname(os.path.abspath(sys.executable))
+        candidates.extend([
+            os.path.join(exe_dir, ".env"),
+            os.path.join(os.path.dirname(exe_dir), ".env"),
+            os.path.join(
+                os.path.expanduser("~/Library/Application Support/TimeTracker"),
+                ".env",
+            ),
+        ])
+
+    candidates.extend([
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"),
+    ])
+
+    seen = set()
+    for path in candidates:
+        norm = os.path.normpath(path)
+        if norm in seen:
+            continue
+        seen.add(norm)
+        if os.path.exists(norm):
+            load_dotenv(norm, override=False)
+
+
+_load_env()
 
 # Supabase (PostgreSQL) is required
 DATABASE_URL = os.getenv("DATABASE_URL")
@@ -59,8 +90,27 @@ def get_con():
     """Get PostgreSQL (Supabase) database connection"""
     pool = _get_pool()
     con = pool.getconn()
-    con.autocommit = False
-    return PooledConnection(pool, con)
+    try:
+        con.autocommit = False
+        cur = con.cursor()
+        cur.execute("SELECT 1")
+        cur.fetchone()
+        cur.close()
+        return PooledConnection(pool, con)
+    except Exception:
+        logging.warning("Discarding stale PostgreSQL pooled connection", exc_info=True)
+        try:
+            pool.putconn(con, close=True)
+        except Exception:
+            logging.exception("Failed to close stale pooled connection cleanly")
+
+        fresh_con = pool.getconn()
+        fresh_con.autocommit = False
+        fresh_cur = fresh_con.cursor()
+        fresh_cur.execute("SELECT 1")
+        fresh_cur.fetchone()
+        fresh_cur.close()
+        return PooledConnection(pool, fresh_con)
 
 def init_db() -> None:
     """Initialize Supabase PostgreSQL database"""

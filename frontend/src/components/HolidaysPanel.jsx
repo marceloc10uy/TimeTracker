@@ -121,7 +121,9 @@ export default function HolidaysPanel({ year: propYear }) {
             hols.push(iso);
             recurringByKey[toYearlyKey(iso)] = r.id;
           }
-        } catch {}
+        } catch {
+          // Skip malformed recurring holiday rows so one bad record does not break the whole panel.
+        }
       });
 
       const pDays = [];

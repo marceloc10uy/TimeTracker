@@ -17,8 +17,11 @@ def mount_react_spa(app: FastAPI) -> None:
     if ENV != "prod":
         return
 
-    base_dir = os.path.dirname(os.path.abspath(__file__))
-    dist_dir = os.path.abspath(os.path.join(base_dir, "..", "frontend", "dist"))
+    if getattr(sys, "frozen", False) and hasattr(sys, "_MEIPASS"):
+        dist_dir = os.path.join(sys._MEIPASS, "frontend", "dist")
+    else:
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        dist_dir = os.path.abspath(os.path.join(base_dir, "..", "frontend", "dist"))
     assets_dir = os.path.join(dist_dir, "assets")
 
     # Helpful error if you forgot to build

@@ -1,0 +1,45 @@
+name: Build macOS app
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-macos-app:
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Make scripts executable
+        run: chmod +x build_macos_app.command
+
+      - name: Build app bundle
+        run: ./build_macos_app.command
+
+      - name: Archive app bundle
+        run: ditto -c -k --sequesterRsrc --keepParent dist/TimeTracker.app dist/TimeTracker-macos.zip
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: TimeTracker-macos-app
+          path: |
+            dist/TimeTracker-macos.zip
+            dist/TimeTracker.app

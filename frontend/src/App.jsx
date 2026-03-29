@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { apiGet, apiGetDashboard, apiPatch, apiPost } from "./api";
+import { apiGet, apiGetDashboard, apiPatch, apiPost, subscribeToApiActivity } from "./api";
+import { captureFrontendException, flushFrontendSentry, getFrontendSentryStatus } from "./sentry";
 import { computeNetMinutesLive, minutesToHHMM, todayISO } from "./time";
 import HolidaysPanel from "./components/HolidaysPanel";
 import TimeTrackerView from "./components/TimeTrackerView";
 import Header from "./components/Header";
+import "./App.css";
 
 export default function App() {
   const [selectedDate, setSelectedDate] = useState(todayISO());
@@ -13,6 +15,9 @@ export default function App() {
   const [err, setErr] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [activeTab, setActiveTab] = useState("timetracker");
+  const [apiBusy, setApiBusy] = useState(false);
+  const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
+  const [frontendSentryStatus] = useState(() => getFrontendSentryStatus());
 
   // local editable inputs
   const [startEdit, setStartEdit] = useState("");
@@ -36,7 +41,6 @@ export default function App() {
 
   useEffect(() => {
     loadAll(selectedDate).catch((e) => setErr(String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
   useEffect(() => {
@@ -46,8 +50,25 @@ export default function App() {
     if (previousTab === activeTab) return;
     if (activeTab !== "timetracker") return;
     loadAll(selectedDate).catch((e) => setErr(String(e)));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
+
+  useEffect(() => subscribeToApiActivity(setApiBusy), []);
+
+  useEffect(() => {
+    let showTimeoutId;
+    let hideTimeoutId;
+
+    if (apiBusy) {
+      showTimeoutId = setTimeout(() => setShowLoadingOverlay(true), 0);
+    } else {
+      hideTimeoutId = setTimeout(() => setShowLoadingOverlay(false), 120);
+    }
+
+    return () => {
+      clearTimeout(showTimeoutId);
+      clearTimeout(hideTimeoutId);
+    };
+  }, [apiBusy]);
 
   // Handle window resize
   useEffect(() => {
@@ -207,11 +228,41 @@ export default function App() {
     }
   };
 
+  const testBackendSentry = async () => {
+    try {
+      setErr("");
+      await apiGet("/api/debug/sentry-backend");
+    } catch (e) {
+      setErr(String(e));
+    }
+  };
+
+  const testFrontendSentry = async () => {
+    const error = new Error("Intentional frontend Sentry test error");
+    const eventId = captureFrontendException(error, { source: "manual-test-button" });
+    const flushed = await flushFrontendSentry(2000);
+    setErr(
+      flushed
+        ? `Frontend Sentry test sent. Event ID: ${eventId}`
+        : `Frontend Sentry queued but did not flush in time. Event ID: ${eventId}`
+    );
+  };
+
   return (
-    <div>
+    <div className="app-shell">
+      {showLoadingOverlay && (
+        <div className="loading-overlay" role="status" aria-live="polite" aria-label="Loading">
+          <div className="loading-overlay__spinner" aria-hidden="true" />
+          <span className="loading-overlay__label">Syncing...</span>
+        </div>
+      )}
+
       <Header 
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        testFrontendSentry={testFrontendSentry}
+        testBackendSentry={testBackendSentry}
+        frontendSentryStatus={frontendSentryStatus}
       />
 
       {activeTab === "timetracker" && (

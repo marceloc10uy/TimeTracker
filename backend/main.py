@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from backend.db import init_db
 from backend.logging_config import setup_logging
 from backend.middleware import add_request_logging
+from backend.sentry_config import init_sentry
 from backend.routers.day_router import router as day_router
 from backend.routers.week_router import router as week_router
 from backend.routers.settings_router import router as settings_router
@@ -11,9 +12,9 @@ from backend.routers.recurring_holiday_router import router as recurring_holiday
 from backend.routers.timeoff_router import router as timeoff_router
 from backend.routers.calendar_router import router as calendar_router
 from backend.routers.dashboard_router import router as dashboard_router
+from backend.routers.debug_router import router as debug_router
 
 def create_app() -> FastAPI:
-    setup_logging()
     app = FastAPI(title="Time Tracker API")
     add_request_logging(app)
     app.include_router(day_router)
@@ -23,8 +24,11 @@ def create_app() -> FastAPI:
     app.include_router(recurring_holiday_router)
     app.include_router(timeoff_router)
     app.include_router(calendar_router)
+    app.include_router(debug_router)
     mount_react_spa(app)
     return app
 
+setup_logging()
+init_sentry()
 init_db()
 app = create_app()

@@ -1,5 +1,35 @@
+import { captureFrontendException } from "./sentry.js";
+
+let activeRequestCount = 0;
+const listeners = new Set();
+
+function notifyApiActivity() {
+    const isBusy = activeRequestCount > 0;
+    listeners.forEach((listener) => listener(isBusy));
+}
+
+function beginApiRequest() {
+    activeRequestCount += 1;
+    notifyApiActivity();
+}
+
+function endApiRequest() {
+    activeRequestCount = Math.max(0, activeRequestCount - 1);
+    notifyApiActivity();
+}
+
+export function subscribeToApiActivity(listener) {
+    listeners.add(listener);
+    listener(activeRequestCount > 0);
+
+    return () => {
+        listeners.delete(listener);
+    };
+}
+
 async function logFetch(method, path, options = {}) {
     const start = performance.now();
+    beginApiRequest();
 
     try {
         const res = await fetch(path, options);
@@ -26,13 +56,21 @@ async function logFetch(method, path, options = {}) {
 
         if (!res.ok) {
             console.error("❌ API error payload:", data);
-            throw new Error(data?.detail || "API error");
+            const requestId = data?.request_id || res.headers.get("X-Request-ID");
+            const detail = data?.detail || "API error";
+            const message = requestId
+                ? `${detail} (request ${requestId})`
+                : detail;
+            throw new Error(message);
         }
 
         return data;
     } catch (err) {
         console.error("❌ API ${method} ${path} failed", err);
+        captureFrontendException(err, { method, path });
         throw err
+    } finally {
+        endApiRequest();
     }
 }
 
