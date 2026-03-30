@@ -12,6 +12,7 @@ datas = []
 datas += collect_data_files("fastapi")
 datas += collect_data_files("starlette")
 datas += [("frontend/dist", "frontend/dist")]
+datas += [("runtime_assets/.env.example", "runtime_assets")]
 
 app = Analysis(
     ["timetracker_app.py"],

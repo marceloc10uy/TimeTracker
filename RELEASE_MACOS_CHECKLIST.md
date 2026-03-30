@@ -56,7 +56,19 @@ That installer will place the app at:
 
 ## 5. Verify runtime config
 
-Make sure your runtime config still exists here:
+After install, the runtime folder should exist here:
+
+```bash
+~/Library/Application Support/TimeTracker/
+```
+
+The installer also places a starter file here on first install:
+
+```bash
+~/Library/Application Support/TimeTracker/.env.example
+```
+
+Create your real runtime config here:
 
 ```bash
 ~/Library/Application Support/TimeTracker/.env

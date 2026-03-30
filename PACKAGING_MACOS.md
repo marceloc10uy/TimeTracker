@@ -77,9 +77,25 @@ Recommended location:
 ~/Library/Application Support/TimeTracker/.env
 ```
 
+On first install, the `.pkg` now creates:
+
+```bash
+~/Library/Application Support/TimeTracker/
+```
+
+and drops a starter file at:
+
+```bash
+~/Library/Application Support/TimeTracker/.env.example
+```
+
+You still need to create `.env` with your real secrets. The installer does not embed production credentials in the app bundle.
+
 ## Notes
 
 - This is packaging/obscurity, not strong source-code protection.
 - The frontend source is not needed at runtime; only the built `dist` assets are bundled.
 - The `.pkg` installs `TimeTracker.app` into `/Applications`.
+- The installer creates `~/Library/Application Support/TimeTracker/` for the signed-in user.
+- The app now shows a visible startup error if required config is missing.
 - If you want stronger protection later, the next step would be code signing, notarization, and moving secrets/data fully outside the bundle.

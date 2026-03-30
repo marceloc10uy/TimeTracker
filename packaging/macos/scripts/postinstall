@@ -1,0 +1,31 @@
+#!/bin/bash
+
+set -euo pipefail
+
+APP_PATH="/Applications/TimeTracker.app"
+ENV_EXAMPLE_SOURCE="$APP_PATH/Contents/Resources/runtime_assets/.env.example"
+
+console_user="$(stat -f%Su /dev/console)"
+if [ -z "$console_user" ] || [ "$console_user" = "root" ]; then
+  exit 0
+fi
+
+user_home="$(dscl . -read "/Users/$console_user" NFSHomeDirectory | awk '{print $2}')"
+if [ -z "$user_home" ]; then
+  exit 0
+fi
+
+runtime_dir="$user_home/Library/Application Support/TimeTracker"
+env_example_target="$runtime_dir/.env.example"
+
+mkdir -p "$runtime_dir"
+
+if [ -f "$ENV_EXAMPLE_SOURCE" ] && [ ! -f "$env_example_target" ]; then
+  cp "$ENV_EXAMPLE_SOURCE" "$env_example_target"
+fi
+
+chown -R "$console_user":staff "$runtime_dir"
+chmod 755 "$runtime_dir"
+if [ -f "$env_example_target" ]; then
+  chmod 600 "$env_example_target"
+fi
