@@ -26,6 +26,33 @@ def _wait_for_server_and_open_browser() -> None:
             time.sleep(0.5)
 
 
+def _terminate_existing_listener() -> None:
+    try:
+        with socket.create_connection((HOST, PORT), timeout=0.5):
+            pass
+    except OSError:
+        return
+
+    if sys.platform == "darwin":
+        try:
+            result = subprocess.run(
+                ["lsof", "-tiTCP:%s" % PORT, "-sTCP:LISTEN"],
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            pids = [pid.strip() for pid in result.stdout.splitlines() if pid.strip()]
+            for pid in pids:
+                subprocess.run(["kill", pid], check=False)
+            if pids:
+                time.sleep(1)
+            for pid in pids:
+                subprocess.run(["kill", "-9", pid], check=False)
+                time.sleep(0.2)
+        except Exception:
+            pass
+
+
 def _escape_applescript(value: str) -> str:
     return value.replace("\\", "\\\\").replace("\"", "\\\"")
 
@@ -56,6 +83,7 @@ def _show_startup_error(message: str) -> None:
 
 if __name__ == "__main__":
     try:
+        _terminate_existing_listener()
         from backend.main import app
 
         threading.Thread(target=_wait_for_server_and_open_browser, daemon=True).start()

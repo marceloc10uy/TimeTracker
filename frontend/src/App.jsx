@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { apiGet, apiGetDashboard, apiPatch, apiPost, subscribeToApiActivity } from "./api";
-import { captureFrontendException, flushFrontendSentry, getFrontendSentryStatus } from "./sentry";
 import { computeNetMinutesLive, minutesToHHMM, todayISO } from "./time";
 import HolidaysPanel from "./components/HolidaysPanel";
 import TimeTrackerView from "./components/TimeTrackerView";
@@ -17,7 +16,6 @@ export default function App() {
   const [activeTab, setActiveTab] = useState("timetracker");
   const [apiBusy, setApiBusy] = useState(false);
   const [showLoadingOverlay, setShowLoadingOverlay] = useState(false);
-  const [frontendSentryStatus] = useState(() => getFrontendSentryStatus());
 
   // local editable inputs
   const [startEdit, setStartEdit] = useState("");
@@ -228,26 +226,6 @@ export default function App() {
     }
   };
 
-  const testBackendSentry = async () => {
-    try {
-      setErr("");
-      await apiGet("/api/debug/sentry-backend");
-    } catch (e) {
-      setErr(String(e));
-    }
-  };
-
-  const testFrontendSentry = async () => {
-    const error = new Error("Intentional frontend Sentry test error");
-    const eventId = captureFrontendException(error, { source: "manual-test-button" });
-    const flushed = await flushFrontendSentry(2000);
-    setErr(
-      flushed
-        ? `Frontend Sentry test sent. Event ID: ${eventId}`
-        : `Frontend Sentry queued but did not flush in time. Event ID: ${eventId}`
-    );
-  };
-
   return (
     <div className="app-shell">
       {showLoadingOverlay && (
@@ -257,13 +235,7 @@ export default function App() {
         </div>
       )}
 
-      <Header 
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        testFrontendSentry={testFrontendSentry}
-        testBackendSentry={testBackendSentry}
-        frontendSentryStatus={frontendSentryStatus}
-      />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {activeTab === "timetracker" && (
       <div>

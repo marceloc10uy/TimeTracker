@@ -23,12 +23,15 @@ def mount_react_spa(app: FastAPI) -> None:
         base_dir = os.path.dirname(os.path.abspath(__file__))
         dist_dir = os.path.abspath(os.path.join(base_dir, "..", "frontend", "dist"))
     assets_dir = os.path.join(dist_dir, "assets")
+    index_path = os.path.join(dist_dir, "index.html")
 
     # Helpful error if you forgot to build
     if not os.path.isdir(dist_dir):
         raise RuntimeError(f"Frontend dist folder not found: {dist_dir}. Run `npm run build` in /frontend.")
     if not os.path.isdir(assets_dir):
         raise RuntimeError(f"Frontend assets folder not found: {assets_dir}. Run `npm run build` in /frontend.")
+    if not os.path.isfile(index_path):
+        raise RuntimeError(f"Frontend index file not found: {index_path}. The packaged frontend build is incomplete.")
     
     # Mount static assets first
     app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
@@ -36,7 +39,7 @@ def mount_react_spa(app: FastAPI) -> None:
     # Serve index at root
     @app.get("/", include_in_schema=False)
     def serve_index():
-        return FileResponse(os.path.join(dist_dir, "index.html"))
+        return FileResponse(index_path)
     
     # Serve any real file if it exists, otherwise fallback to SPA index
     @app.get("/{path:path}", include_in_schema=False)
@@ -44,4 +47,4 @@ def mount_react_spa(app: FastAPI) -> None:
         full_path = os.path.join(dist_dir, path)
         if os.path.isfile(full_path):
             return FileResponse(full_path)
-        return FileResponse(os.path.join(dist_dir, "index.html"))
+        return FileResponse(index_path)
