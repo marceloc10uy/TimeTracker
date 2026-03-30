@@ -2,3 +2,5 @@
 .env
 .env.local
 .env.*.local
+runtime_assets/build_info.json
+frontend/public/build-info.json

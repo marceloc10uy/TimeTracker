@@ -5,6 +5,7 @@ import sys
 import threading
 import time
 import webbrowser
+import logging
 
 import uvicorn
 
@@ -85,6 +86,21 @@ if __name__ == "__main__":
     try:
         _terminate_existing_listener()
         from backend.main import app
+        from backend.build_info import get_build_info
+
+        build_info = get_build_info()
+        logging.info(
+            "TimeTracker startup | executable=%s | cwd=%s | runtime_dir=%s | host=%s | port=%s | frozen=%s | version=%s | commit=%s | built_at=%s",
+            os.path.abspath(sys.executable),
+            os.getcwd(),
+            RUNTIME_DIR,
+            HOST,
+            PORT,
+            getattr(sys, "frozen", False),
+            build_info["version"],
+            build_info["commit"],
+            build_info["built_at"],
+        )
 
         threading.Thread(target=_wait_for_server_and_open_browser, daemon=True).start()
         uvicorn.run(app, host=HOST, port=PORT)

@@ -1,8 +1,22 @@
-export default function Header({ activeTab, setActiveTab }) {
+export default function Header({ activeTab, setActiveTab, buildInfo }) {
+    const buildLabel = buildInfo
+        ? `Build ${buildInfo.version} | ${buildInfo.commit} | ${buildInfo.built_at}`
+        : "Build info unavailable";
 
     return (
         <div style={{ width: "100vw", marginTop: 30  }}>
             <h2 style={{ marginTop: 4, textAlign: "center" }}>Time Tracker</h2>
+            <div
+                style={{
+                    textAlign: "center",
+                    fontSize: 12,
+                    opacity: 0.65,
+                    marginTop: 6,
+                    marginBottom: 14,
+                }}
+            >
+                {buildLabel}
+            </div>
 
             <div style={{ display: "flex", gap: 10, justifyContent: "center", marginBottom: 14 }}>
                 <button

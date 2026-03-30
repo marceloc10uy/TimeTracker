@@ -11,6 +11,7 @@ export default function App() {
   const [day, setDay] = useState(null);
   const [week, setWeek] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [buildInfo, setBuildInfo] = useState(null);
   const [err, setErr] = useState("");
   const [windowWidth, setWindowWidth] = useState(window.innerWidth);
   const [activeTab, setActiveTab] = useState("timetracker");
@@ -51,6 +52,23 @@ export default function App() {
   }, [activeTab]);
 
   useEffect(() => subscribeToApiActivity(setApiBusy), []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    fetch("/build-info.json", { cache: "no-store" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!cancelled && data) {
+          setBuildInfo(data);
+        }
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let showTimeoutId;
@@ -235,7 +253,7 @@ export default function App() {
         </div>
       )}
 
-      <Header activeTab={activeTab} setActiveTab={setActiveTab} />
+      <Header activeTab={activeTab} setActiveTab={setActiveTab} buildInfo={buildInfo} />
 
       {activeTab === "timetracker" && (
       <div>

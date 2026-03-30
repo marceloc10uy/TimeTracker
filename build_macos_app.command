@@ -4,6 +4,8 @@ cd "$(dirname "$0")"
 set -e
 
 VENV_PY=".venv/bin/python3"
+BUILD_INFO_RUNTIME="runtime_assets/build_info.json"
+BUILD_INFO_FRONTEND="frontend/public/build-info.json"
 
 if [ "$(uname)" != "Darwin" ]; then
   echo "This build script is intended to run on macOS."
@@ -49,6 +51,15 @@ echo "Checking frontend dependencies..."
 if [ ! -d "frontend/node_modules" ]; then
   npm --prefix frontend install
 fi
+
+echo "Generating build metadata..."
+mkdir -p runtime_assets frontend/public
+BUILD_VERSION="$(node -p "require('./frontend/package.json').version")"
+BUILD_COMMIT="$(git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
+BUILD_TIMESTAMP="$(date -u +"%Y-%m-%dT%H:%M:%SZ")"
+printf '{\n  "version": "%s",\n  "commit": "%s",\n  "built_at": "%s"\n}\n' \
+  "$BUILD_VERSION" "$BUILD_COMMIT" "$BUILD_TIMESTAMP" > "$BUILD_INFO_RUNTIME"
+cp "$BUILD_INFO_RUNTIME" "$BUILD_INFO_FRONTEND"
 
 echo "Building frontend assets..."
 npm --prefix frontend run build
